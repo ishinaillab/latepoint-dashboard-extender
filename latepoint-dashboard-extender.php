@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through server-side shortcode output composition.
- * Version: 0.10.25
+ * Version: 0.10.26
  * Author: Ishi
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.25');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.26');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
@@ -260,6 +260,7 @@ final class LatePoint_Dashboard_Extender {
         }
 
         $items = $order->get_items('line_item');
+        $items_element = null;
 
         if (!empty($items)) {
             $items_element = $dom->createElement('div');
