@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through server-side shortcode output composition.
- * Version: 0.10.24
+ * Version: 0.10.25
  * Author: Ishi
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.24');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.25');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
@@ -22,8 +22,6 @@ final class LatePoint_Dashboard_Extender {
         add_filter('do_shortcode_tag', array(__CLASS__, 'filter_customer_dashboard_output'), 10, 4);
         add_action('latepoint_init', array(__CLASS__, 'load_latepoint_extension'), 20);
         add_action('latepoint_wp_enqueue_scripts', array(__CLASS__, 'enqueue_styles'));
-        add_action('latepoint_wp_enqueue_scripts', array(__CLASS__, 'enqueue_scripts'));
-        add_action('latepoint_customer_updated', array(__CLASS__, 'save_display_name'), 20, 2);
     }
 
     public static function load_latepoint_extension() {
@@ -43,14 +41,6 @@ final class LatePoint_Dashboard_Extender {
         );
     }
 
-    public static function enqueue_scripts() {
-        // The Display Name field intentionally follows LatePoint's native form lifecycle.
-        // It is rendered into the native Profile form, serialized by LatePoint inside
-        // the native params payload, and saved during latepoint_customer_updated.
-        // No polling, ajaxComplete listener, MutationObserver, or secondary AJAX readback
-        // is needed or appropriate here.
-    }
-
     public static function filter_customer_dashboard_output($output, $tag, $attr, $m) {
         if ($tag !== 'latepoint_customer_dashboard' || self::$processing) {
             return $output;
@@ -61,7 +51,6 @@ final class LatePoint_Dashboard_Extender {
         try {
             $output = self::rename_orders_tab($output);
             $output = self::add_press_ons_tab($output);
-            $output = self::replace_profile_form($output);
         } finally {
             self::$processing = false;
         }
@@ -236,177 +225,6 @@ final class LatePoint_Dashboard_Extender {
         libxml_use_internal_errors($previous);
 
         return $result;
-    }
-
-    private static function replace_profile_form($html) {
-        if (!is_string($html) || $html === '' || !class_exists('DOMDocument') || !class_exists('OsAuthHelper')) {
-            return $html;
-        }
-
-        $customer = OsAuthHelper::get_logged_in_customer();
-        if (!$customer) {
-            return $html;
-        }
-
-        $dom = new DOMDocument('1.0', 'UTF-8');
-        $previous = libxml_use_internal_errors(true);
-        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
-
-        if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-            return $html;
-        }
-
-        $xpath = new DOMXPath($dom);
-        $root = $dom->getElementById('latepoint-dashboard-extender-root');
-        $profile_content = $xpath->query(
-            './/*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")][contains(concat(" ", normalize-space(@class), " "), " tab-content-customer-info-form ")]'
-        )->item(0);
-        $form = $profile_content ? $xpath->query('.//form[@data-os-action]', $profile_content)->item(0) : null;
-
-        if (!$root || !$form || $xpath->query('.//*[@data-ishi-profile-form="1"]', $form)->length > 0) {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-            return $html;
-        }
-
-        $wp_user_id = !empty($customer->wordpress_user_id) ? absint($customer->wordpress_user_id) : 0;
-        $wp_user = $wp_user_id ? get_userdata($wp_user_id) : false;
-        $display_name = $wp_user ? $wp_user->display_name : '';
-
-        // Keep LatePoint's native action, data attributes and nonce lifecycle intact.
-        $existing_form_class = trim($form->getAttribute('class'));
-        $form->setAttribute('class', trim($existing_form_class . ' woocommerce-EditAccountForm edit-account'));
-
-        $nonce = $xpath->query('.//input[@name="_wpnonce"]', $form)->item(0);
-        while ($form->firstChild) {
-            $form->removeChild($form->firstChild);
-        }
-
-        $shell = $dom->createElement('div');
-        $shell->setAttribute('class', 'woocommerce-MyAccount-content ishi-profile-account-details');
-        $shell->setAttribute('data-ishi-profile-form', '1');
-
-        $first_last = $dom->createElement('div');
-        $first_last->setAttribute('class', 'ishi-profile-fields-row');
-        $first_last->appendChild(self::profile_field($dom, 'customer[first_name]', __('First name', 'latepoint'), $customer->first_name, 'text', true, 'account_first_name', 'woocommerce-form-row--first form-row-first', 'given-name'));
-        $first_last->appendChild(self::profile_field($dom, 'customer[last_name]', __('Last name', 'latepoint'), $customer->last_name, 'text', true, 'account_last_name', 'woocommerce-form-row--last form-row-last', 'family-name'));
-        $shell->appendChild($first_last);
-        $clear = $dom->createElement('div');
-        $clear->setAttribute('class', 'clear');
-        $shell->appendChild($clear);
-
-        $shell->appendChild(self::profile_field($dom, 'ishi_profile_display_name', __('Display name', 'latepoint'), $display_name, 'text', true, 'account_display_name', 'woocommerce-form-row--wide form-row-wide', 'name', __('This will be how your name will be displayed in the account section and in reviews', 'latepoint')));
-        $clear = $dom->createElement('div');
-        $clear->setAttribute('class', 'clear');
-        $shell->appendChild($clear);
-        $email_phone = $dom->createElement('div');
-        $email_phone->setAttribute('class', 'ishi-profile-fields-row');
-        $email_phone->appendChild(self::profile_field($dom, 'customer[email]', __('Email address', 'latepoint'), $customer->email, 'email', true, 'account_email', 'woocommerce-form-row--first form-row-first', 'email'));
-        $email_phone->appendChild(self::profile_field($dom, 'customer[phone]', __('Phone number', 'latepoint'), $customer->phone, 'tel', false, 'account_phone', 'woocommerce-form-row--last form-row-last', 'tel'));
-        $shell->appendChild($email_phone);
-
-        $actions = $dom->createElement('p');
-        $actions->setAttribute('class', 'woocommerce-form-row form-row');
-        $button = $dom->createElement('button');
-        $button->setAttribute('type', 'submit');
-        $button->setAttribute('class', 'woocommerce-Button button');
-        $button->setAttribute('name', 'save_account_details');
-        $button->setAttribute('value', __('Save changes', 'latepoint'));
-        $button->appendChild($dom->createTextNode(__('Save changes', 'latepoint')));
-        $actions->appendChild($button);
-        $shell->appendChild($actions);
-
-        $form->appendChild($shell);
-        if ($nonce) {
-            $form->appendChild($nonce->cloneNode(true));
-        }
-
-        $result = self::serialize_root($dom);
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
-        return $result;
-    }
-
-    private static function profile_field($dom, $name, $label_text, $value, $type = 'text', $required = false, $id = '', $classes = 'woocommerce-form-row--wide form-row-wide', $autocomplete = 'off', $description = '') {
-        $group = $dom->createElement('p');
-        $group->setAttribute('class', 'woocommerce-form-row ' . $classes . ' form-row');
-        $label = $dom->createElement('label');
-        $label->setAttribute('for', $id);
-        $label->appendChild($dom->createTextNode($label_text . ' '));
-        if ($required) {
-            $required_node = $dom->createElement('span');
-            $required_node->setAttribute('class', 'required');
-            $required_node->setAttribute('aria-hidden', 'true');
-            $required_node->appendChild($dom->createTextNode('*'));
-            $label->appendChild($required_node);
-        }
-        $group->appendChild($label);
-        $input = $dom->createElement('input');
-        $input->setAttribute('type', $type);
-        $input->setAttribute('name', $name);
-        $input->setAttribute('id', $id);
-        $input->setAttribute('autocomplete', $autocomplete);
-        $input->setAttribute('class', 'woocommerce-Input woocommerce-Input--' . ($type === 'email' ? 'email' : 'text') . ' input-text filled fill_inited');
-        $input->setAttribute('value', (string) $value);
-        if ($required) {
-            $input->setAttribute('aria-required', 'true');
-        }
-        $group->appendChild($input);
-        if ($description !== '') {
-            $description_node = $dom->createElement('span');
-            $description_node->setAttribute('id', $id . '_description');
-            $em = $dom->createElement('em');
-            $em->appendChild($dom->createTextNode($description));
-            $description_node->appendChild($em);
-            $group->appendChild($description_node);
-        }
-        return $group;
-    }
-
-    public static function save_display_name($customer, $old_customer_data = array()) {
-        if (!is_object($customer)) {
-            return;
-        }
-
-        if (!function_exists('wp_get_current_user') || !function_exists('wp_update_user')) {
-            return;
-        }
-
-        // LatePoint submits the form fields inside its encoded `params` POST field.
-        // Read that payload first, with a direct POST fallback for compatibility.
-        $submitted_display_name = '';
-        if (isset($_POST['params']) && is_string($_POST['params'])) {
-            $latepoint_params = array();
-            parse_str(wp_unslash($_POST['params']), $latepoint_params);
-            if (isset($latepoint_params['ishi_profile_display_name'])) {
-                $submitted_display_name = $latepoint_params['ishi_profile_display_name'];
-            }
-        }
-        if ($submitted_display_name === '' && isset($_POST['ishi_profile_display_name'])) {
-            $submitted_display_name = wp_unslash($_POST['ishi_profile_display_name']);
-        }
-        if ($submitted_display_name === '') {
-            return;
-        }
-
-        $wp_user_id = !empty($customer->wordpress_user_id) ? absint($customer->wordpress_user_id) : 0;
-        $current_user = wp_get_current_user();
-
-        if (!$wp_user_id || !$current_user || empty($current_user->ID) || (int) $current_user->ID !== $wp_user_id) {
-            return;
-        }
-
-        $display_name = sanitize_text_field($submitted_display_name);
-        if ($display_name === '') {
-            return;
-        }
-
-        wp_update_user(array(
-            'ID' => $wp_user_id,
-            'display_name' => $display_name,
-        ));
     }
 
     private static function create_order_card($dom, $order) {
