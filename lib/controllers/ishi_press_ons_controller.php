@@ -20,7 +20,7 @@ if (!class_exists('OsIshiPressOnsController')) {
                 array('view_order_in_lightbox')
             );
 
-            $this->views_folder = ISHI_LP_CDE_PATH . 'lib/views/';
+            $this->views_folder = LATEPOINT_DASHBOARD_EXTENDER_PATH . 'lib/views/';
         }
 
         public function view_order_in_lightbox() {

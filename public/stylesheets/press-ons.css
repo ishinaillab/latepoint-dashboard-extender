@@ -349,7 +349,7 @@ form.woocommerce-EditAccountForm.edit-account
     color: #FF5B4A !important;
 }
 
-/* v0.10.20 — Match the Qwery/Nails display-name description typography.
+/* v0.10.23 — Match the Qwery/Nails display-name description typography.
    The description is rendered as #account_display_name_description > em.
    Use the theme paragraph line-height variable instead of the browser default. */
 form.woocommerce-EditAccountForm.edit-account
@@ -404,7 +404,7 @@ form.woocommerce-EditAccountForm.edit-account
 }
 
 
-/* v0.10.21 — Complete the Profile form compatibility bridge. */
+/* v0.10.23 — Complete the Profile form compatibility bridge. */
 form.woocommerce-EditAccountForm.edit-account {
     width: 100%;
     max-width: 100%;

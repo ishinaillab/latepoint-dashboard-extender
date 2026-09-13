@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through server-side shortcode output composition.
- * Version: 0.10.22
+ * Version: 0.10.23
  * Author: Ishi
  */
 
@@ -10,11 +10,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('ISHI_LP_CDE_VERSION', '0.10.21');
-define('ISHI_LP_CDE_PATH', plugin_dir_path(__FILE__));
-define('ISHI_LP_CDE_URL', plugin_dir_url(__FILE__));
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.23');
+define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
+define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
-final class Ishi_LatePoint_Customer_Dashboard_Extension {
+final class LatePoint_Dashboard_Extender {
 
     private static $processing = false;
 
@@ -27,7 +27,7 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
     }
 
     public static function load_latepoint_extension() {
-        $controller_file = ISHI_LP_CDE_PATH . 'lib/controllers/ishi_press_ons_controller.php';
+        $controller_file = LATEPOINT_DASHBOARD_EXTENDER_PATH . 'lib/controllers/ishi_press_ons_controller.php';
 
         if (file_exists($controller_file)) {
             require_once $controller_file;
@@ -36,10 +36,10 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
 
     public static function enqueue_styles() {
         wp_enqueue_style(
-            'ishi-latepoint-customer-dashboard-extension',
-            ISHI_LP_CDE_URL . 'public/stylesheets/press-ons.css',
+            'latepoint-dashboard-extender',
+            LATEPOINT_DASHBOARD_EXTENDER_URL . 'public/stylesheets/press-ons.css',
             array(),
-            ISHI_LP_CDE_VERSION
+            LATEPOINT_DASHBOARD_EXTENDER_VERSION
         );
     }
 
@@ -76,7 +76,7 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $previous = libxml_use_internal_errors(true);
-        $wrapped = '<!DOCTYPE html><html><body><div id="ishi-lp-dashboard-root">' . $html . '</div></body></html>';
+        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
 
         if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
             libxml_clear_errors();
@@ -86,7 +86,7 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
 
         $xpath = new DOMXPath($dom);
         $triggers = $xpath->query(
-            '//*[@id="ishi-lp-dashboard-root"]//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]'
+            '//*[@id="latepoint-dashboard-extender-root"]//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]'
         );
 
         if ($triggers !== false) {
@@ -122,7 +122,7 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $previous = libxml_use_internal_errors(true);
-        $wrapped = '<!DOCTYPE html><html><body><div id="ishi-lp-dashboard-root">' . $html . '</div></body></html>';
+        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
 
         if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
             libxml_clear_errors();
@@ -131,7 +131,7 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
         }
 
         $xpath = new DOMXPath($dom);
-        $root = $dom->getElementById('ishi-lp-dashboard-root');
+        $root = $dom->getElementById('latepoint-dashboard-extender-root');
 
         if (!$root || $xpath->query('.//*[@data-ishi-dashboard-tab="press-ons"]')->length > 0) {
             libxml_clear_errors();
@@ -250,7 +250,7 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $previous = libxml_use_internal_errors(true);
-        $wrapped = '<!DOCTYPE html><html><body><div id="ishi-lp-dashboard-root">' . $html . '</div></body></html>';
+        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
 
         if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
             libxml_clear_errors();
@@ -259,7 +259,7 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
         }
 
         $xpath = new DOMXPath($dom);
-        $root = $dom->getElementById('ishi-lp-dashboard-root');
+        $root = $dom->getElementById('latepoint-dashboard-extender-root');
         $profile_content = $xpath->query(
             './/*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")][contains(concat(" ", normalize-space(@class), " "), " tab-content-customer-info-form ")]'
         )->item(0);
@@ -745,7 +745,7 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
     }
 
     private static function serialize_root($dom) {
-        $root = $dom->getElementById('ishi-lp-dashboard-root');
+        $root = $dom->getElementById('latepoint-dashboard-extender-root');
 
         if (!$root) {
             return '';
@@ -761,4 +761,4 @@ final class Ishi_LatePoint_Customer_Dashboard_Extension {
     }
 }
 
-Ishi_LatePoint_Customer_Dashboard_Extension::init();
+LatePoint_Dashboard_Extender::init();
