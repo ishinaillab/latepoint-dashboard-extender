@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through server-side shortcode output composition.
- * Version: 0.10.27
+ * Version: 0.10.28
  * Author: Ishi
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.27');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.28');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
@@ -51,6 +51,7 @@ final class LatePoint_Dashboard_Extender {
         try {
             $output = self::rename_orders_tab($output);
             $output = self::add_press_ons_tab($output);
+            $output = self::add_addresses_tab($output);
         } finally {
             self::$processing = false;
         }
@@ -224,6 +225,117 @@ final class LatePoint_Dashboard_Extender {
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
 
+        return $result;
+    }
+
+
+    private static function add_addresses_tab($html) {
+        if (!is_string($html) || $html === '' || !class_exists('DOMDocument') || !function_exists('wc_get_account_endpoint_url')) {
+            return $html;
+        }
+
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $previous = libxml_use_internal_errors(true);
+        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
+
+        if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+            return $html;
+        }
+
+        $xpath = new DOMXPath($dom);
+        $root = $dom->getElementById('latepoint-dashboard-extender-root');
+        $trigger_container = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-triggers ")]', $root)->item(0);
+        if (!$root || !$trigger_container || $xpath->query('.//*[@data-ishi-dashboard-tab="addresses"]', $root)->length > 0) {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+            return $html;
+        }
+
+        $history_trigger = null;
+        foreach ($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]', $trigger_container) as $trigger) {
+            if (strpos($trigger->getAttribute('data-tab-target'), 'tab-content-customer-orders') !== false) {
+                $history_trigger = $trigger;
+                break;
+            }
+        }
+        if (!$history_trigger) {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+            return $html;
+        }
+
+        $trigger = $dom->createElement('a');
+        $trigger->setAttribute('href', '#');
+        $trigger->setAttribute('class', 'latepoint-tab-trigger');
+        $trigger->setAttribute('data-tab-target', '.tab-content-ishi-customer-addresses');
+        $trigger->setAttribute('data-ishi-dashboard-tab', 'addresses');
+        $trigger->appendChild($dom->createTextNode('Addresses'));
+        if ($history_trigger->nextSibling) $trigger_container->insertBefore($trigger, $history_trigger->nextSibling);
+        else $trigger_container->appendChild($trigger);
+
+        $content = $dom->createElement('div');
+        $content->setAttribute('class', 'latepoint-tab-content tab-content-ishi-customer-addresses');
+        $content->setAttribute('data-ishi-dashboard-tab', 'addresses');
+        $inner = $dom->createElement('div');
+        $inner->setAttribute('class', 'woocommerce');
+        $account = $dom->createElement('div');
+        $account->setAttribute('class', 'woocommerce-MyAccount-content');
+
+        $notices = $dom->createElement('div');
+        $notices->setAttribute('class', 'woocommerce-notices-wrapper');
+        $account->appendChild($notices);
+        $p = $dom->createElement('p');
+        $p->appendChild($dom->createTextNode('The following addresses will be used on the checkout page by default.'));
+        $account->appendChild($p);
+
+        $columns = $dom->createElement('div');
+        $columns->setAttribute('class', 'u-columns woocommerce-Addresses col2-set addresses');
+        $customer = function_exists('WC') ? WC()->customer : null;
+        $addresses = array(
+            'billing' => array('title' => 'Billing address', 'edit' => 'Edit Billing address', 'column' => 'u-column1 col-1'),
+            'shipping' => array('title' => 'Shipping address', 'edit' => 'Edit Shipping address', 'column' => 'u-column2 col-2'),
+        );
+        foreach ($addresses as $type => $data) {
+            $column = $dom->createElement('div');
+            $column->setAttribute('class', $data['column'] . ' woocommerce-Address');
+            $header = $dom->createElement('header');
+            $header->setAttribute('class', 'woocommerce-Address-title title');
+            $h2 = $dom->createElement('h2');
+            $h2->appendChild($dom->createTextNode($data['title']));
+            $header->appendChild($h2);
+            $edit = $dom->createElement('a');
+            $edit->setAttribute('href', esc_url(wc_get_account_endpoint_url('edit-address') . '?address=' . $type));
+            $edit->setAttribute('class', 'edit');
+            $edit->appendChild($dom->createTextNode($data['edit']));
+            $header->appendChild($edit);
+            $column->appendChild($header);
+            $address = $dom->createElement('address');
+            if ($customer && function_exists('wc_get_account_formatted_address')) {
+                $formatted = wc_get_account_formatted_address($type);
+                if ($formatted !== '') {
+                    $fragment = $dom->createDocumentFragment();
+                    if (@$fragment->appendXML($formatted)) $address->appendChild($fragment);
+                    else $address->appendChild($dom->createTextNode(wp_strip_all_tags($formatted)));
+                }
+            }
+            $column->appendChild($address);
+            $columns->appendChild($column);
+        }
+        $account->appendChild($columns);
+        $inner->appendChild($account);
+        $content->appendChild($inner);
+
+        $orders_content = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")][contains(concat(" ", normalize-space(@class), " "), " tab-content-customer-orders ")]', $root)->item(0);
+        if ($orders_content && $orders_content->parentNode) {
+            if ($orders_content->nextSibling) $orders_content->parentNode->insertBefore($content, $orders_content->nextSibling);
+            else $orders_content->parentNode->appendChild($content);
+        } else $root->appendChild($content);
+
+        $result = self::serialize_root($dom);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
         return $result;
     }
 
