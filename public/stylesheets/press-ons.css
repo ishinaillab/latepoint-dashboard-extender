@@ -517,3 +517,126 @@ form.woocommerce-EditAccountForm.edit-account
         max-width: 100%;
     }
 }
+
+
+/* v0.10.24 — Apply the Account Details visual system to every Profile form.
+   The Profile tab contains more than the account-details form: LatePoint's
+   password form and any additional profile forms must inherit the same
+   WooCommerce/Qwery field geometry without changing their submission logic. */
+.latepoint-tab-content.tab-content-customer-info-form form,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w form {
+    box-sizing: border-box;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w {
+    width: 100%;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-col-6 {
+    width: 50%;
+    box-sizing: border-box;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-col-6:first-child {
+    padding-left: 0;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-col-6:last-child {
+    padding-right: 0;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w label,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-form-control-label {
+    display: block;
+    margin-top: 0;
+    margin-bottom: 15px;
+    line-height: 1.5em;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--theme-color-text_dark, inherit);
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w input,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w textarea,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w select,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-form-control {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    color: var(--theme-color-input_text, inherit);
+    background-color: var(--theme-color-input_bg_color, #FFFFFF);
+    border-color: var(--theme-color-input_bd_color, #F8E0D2);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4855em;
+    box-shadow: 0 15px 15px -14px rgba(0, 0, 0, 0.018);
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w input:hover,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w input:focus,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w textarea:hover,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w textarea:focus,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w select:hover,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w select:focus,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-form-control:hover,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-form-control:focus {
+    border-color: var(--theme-color-input_bd_hover,
+        var(--theme-color-input_bd_color, #F8E0D2));
+    background-color: var(--theme-color-input_bg_hover,
+        var(--theme-color-input_bg_color, #FFFFFF));
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w input:focus,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w textarea:focus,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w select:focus,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-form-control:focus {
+    color: var(--theme-color-input_text_active,
+        var(--theme-color-input_text, inherit));
+    outline: none;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .required {
+    color: #FF5B4A !important;
+    font-weight: 400;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .form-group,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-form-group {
+    margin-bottom: 30px;
+}
+
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .form-actions,
+.latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: -10px;
+    margin-bottom: 23.55px;
+}
+
+@media (max-width: 767px) {
+    .latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w {
+        max-width: 100%;
+    }
+
+    .latepoint-tab-content.tab-content-customer-info-form .customer-password-form-w .os-col-6 {
+        width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}

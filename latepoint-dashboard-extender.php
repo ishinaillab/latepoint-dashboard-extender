@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through server-side shortcode output composition.
- * Version: 0.10.23
+ * Version: 0.10.25
  * Author: Ishi
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.23');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.25');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
@@ -61,6 +61,7 @@ final class LatePoint_Dashboard_Extender {
         try {
             $output = self::rename_orders_tab($output);
             $output = self::add_press_ons_tab($output);
+            $output = self::add_sample_tab($output);
             $output = self::replace_profile_form($output);
         } finally {
             self::$processing = false;
@@ -235,6 +236,99 @@ final class LatePoint_Dashboard_Extender {
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
 
+        return $result;
+    }
+
+    private static function add_sample_tab($html) {
+        if (!is_string($html) || $html === '' || !class_exists('DOMDocument')) {
+            return $html;
+        }
+
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $previous = libxml_use_internal_errors(true);
+        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
+
+        if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+            return $html;
+        }
+
+        $xpath = new DOMXPath($dom);
+        $root = $dom->getElementById('latepoint-dashboard-extender-root');
+
+        if (!$root || $xpath->query('.//*[@data-ishi-dashboard-tab="sample"]')->length > 0) {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+            return $html;
+        }
+
+        $trigger_container = $xpath->query(
+            './/*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-triggers ")]'
+        )->item(0);
+
+        if (!$trigger_container) {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+            return $html;
+        }
+
+        $history_trigger = null;
+        $triggers = $xpath->query(
+            './/*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]',
+            $trigger_container
+        );
+
+        foreach ($triggers as $trigger) {
+            if (strpos($trigger->getAttribute('data-tab-target'), 'tab-content-customer-orders') !== false) {
+                $history_trigger = $trigger;
+                break;
+            }
+        }
+
+        $sample_trigger = $dom->createElement('a');
+        $sample_trigger->setAttribute('href', '#');
+        $sample_trigger->setAttribute('class', 'latepoint-tab-trigger');
+        $sample_trigger->setAttribute('data-tab-target', '.tab-content-ishi-customer-sample');
+        $sample_trigger->setAttribute('data-ishi-dashboard-tab', 'sample');
+        $sample_trigger->appendChild($dom->createTextNode('Sample'));
+
+        if ($history_trigger && $history_trigger->nextSibling) {
+            $trigger_container->insertBefore($sample_trigger, $history_trigger->nextSibling);
+        } elseif ($history_trigger) {
+            $trigger_container->appendChild($sample_trigger);
+        } else {
+            $trigger_container->appendChild($sample_trigger);
+        }
+
+        $sample_content = $dom->createElement('div');
+        $sample_content->setAttribute('class', 'latepoint-tab-content tab-content-ishi-customer-sample');
+        $sample_content->setAttribute('data-ishi-dashboard-tab', 'sample');
+
+        $sample_html = do_shortcode('[elementor-template id="18912"]');
+        if ($sample_html !== '') {
+            $fragment = $dom->createDocumentFragment();
+            $fragment->appendXML($sample_html);
+            $sample_content->appendChild($fragment);
+        }
+
+        $orders_content = $xpath->query(
+            './/*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")][contains(concat(" ", normalize-space(@class), " "), " tab-content-customer-orders ")]'
+        )->item(0);
+
+        if ($orders_content && $orders_content->parentNode) {
+            if ($orders_content->nextSibling) {
+                $orders_content->parentNode->insertBefore($sample_content, $orders_content->nextSibling);
+            } else {
+                $orders_content->parentNode->appendChild($sample_content);
+            }
+        } else {
+            $root->appendChild($sample_content);
+        }
+
+        $result = self::serialize_root($dom);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
         return $result;
     }
 
