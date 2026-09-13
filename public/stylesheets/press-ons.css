@@ -1,0 +1,519 @@
+/* v0.9.1 — Press-Ons follows the native LatePoint History order-tile and
+   order-summary visual language. LatePoint continues to own the lightbox. */
+
+/* Non-modal order tiles: reuse the native History geometry through the same
+   structural classes, then style only the WooCommerce-specific additions. */
+.customer-orders-tiles.ishi-press-ons-order-list {
+    margin: 0;
+}
+
+.customer-orders-tiles .customer-order.ishi-press-ons-order-card {
+    min-width: 0;
+}
+
+.ishi-press-ons-order-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.ishi-press-ons-order-status {
+    color: #7c85a3;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    text-align: right;
+}
+
+.ishi-press-ons-order-items {
+    margin-top: 5px;
+}
+
+.ishi-press-ons-order-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+}
+
+.ishi-press-ons-order-item + .ishi-press-ons-order-item {
+    border-top: 1px solid #f1f1f1;
+}
+
+.ishi-press-ons-order-item-image {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    object-fit: cover;
+    border-radius: var(--latepoint-border-radius);
+}
+
+.ishi-press-ons-order-item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.ishi-press-ons-order-item-name {
+    color: #14161d;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.ishi-press-ons-order-item-meta {
+    color: #7c85a3;
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+.customer-orders-tiles .customer-order .summary-price-item-w.spi-total.ishi-press-ons-order-total {
+    margin-top: 10px;
+}
+
+.ishi-press-ons-order-total .spi-name,
+.ishi-press-ons-order-total .spi-price {
+    font-weight: 600;
+}
+
+/* Native History hierarchy: thick total separator, then thin action separator. */
+.customer-orders-tiles .customer-order .customer-order-bottom-actions.ishi-press-ons-order-card-footer {
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f1f1;
+}
+
+.ishi-press-ons-order-card-footer .load-booking-summary-btn-w {
+    width: auto;
+}
+
+.ishi-press-ons-empty {
+    padding: 25px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #7c85a3;
+    border-radius: var(--latepoint-border-radius);
+}
+
+/* Modal content: native LatePoint lightbox wrapper remains untouched. */
+.customer-dashboard-order-summary-lightbox .ishi-press-ons-full-summary .full-summary-order-info-wrapper {
+    margin-bottom: 40px;
+}
+
+.customer-dashboard-order-summary-lightbox .ishi-press-ons-full-summary .full-summary-order-info-elements {
+    flex-wrap: wrap;
+}
+
+.customer-dashboard-order-summary-lightbox .ishi-press-ons-summary-items {
+    margin-top: 5px;
+}
+
+.customer-dashboard-order-summary-lightbox .ishi-press-ons-summary-item {
+    padding: 15px 0 5px;
+}
+
+.ishi-press-ons-summary-item-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.ishi-press-ons-summary-item-image {
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    object-fit: cover;
+    border-radius: var(--latepoint-border-radius);
+}
+
+.ishi-press-ons-summary-item-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.ishi-press-ons-summary-item-main .sbc-big-item {
+    font-size: 17px;
+}
+
+.ishi-press-ons-summary-item-main .sbc-subtle-item {
+    color: #7c85a3;
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+.ishi-press-ons-summary-item-price {
+    color: var(--latepoint-body-color);
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.customer-dashboard-order-summary-lightbox .ishi-press-ons-addresses {
+    margin-top: 30px;
+    gap: 30px;
+}
+
+.ishi-press-ons-address-content {
+    line-height: 1.55;
+}
+
+.customer-dashboard-order-summary-lightbox .ishi-press-ons-extra-section {
+    margin-top: 30px;
+}
+
+.ishi-press-ons-note + .ishi-press-ons-note {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f1f1f1;
+}
+
+.ishi-press-ons-note p:last-child {
+    margin-bottom: 0;
+}
+
+.ishi-press-ons-downloads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+@media (max-width: 600px) {
+    .ishi-press-ons-order-card-header,
+    .ishi-press-ons-summary-item-row {
+        align-items: flex-start;
+    }
+
+    .ishi-press-ons-summary-item-image {
+        width: 50px;
+        height: 50px;
+        flex-basis: 50px;
+    }
+
+    .customer-dashboard-order-summary-lightbox .ishi-press-ons-addresses {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Native LatePoint Profile field parity for the linked WordPress Display Name. */
+.ishi-latepoint-profile-display-name .os-form-group-transparent {
+  width: 100%;
+}
+.ishi-latepoint-profile-display-name .ishi-latepoint-profile-display-name-value {
+  width: 100%;
+}
+
+/* v0.10.19 — Qwery/Nails-compatible WooCommerce Account Details bridge.
+   The extension preserves LatePoint's native form/AJAX lifecycle. The generated
+   markup places the WooCommerce-compatible form class on the outer LatePoint
+   form, so every selector must follow that actual parent-child hierarchy. */
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.ishi-profile-account-details-title {
+    margin-top: 0;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.ishi-profile-account-details-intro {
+    margin-bottom: 2em;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.ishi-profile-fields-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0 0 47px;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row-first,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row-last {
+    width: 50%;
+    box-sizing: border-box;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row-first {
+    padding-right: 15px;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row-last {
+    padding-left: 15px;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row label {
+    display: block;
+    margin-bottom: 15px;
+    line-height: 1.5em;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--theme-color-text_dark, inherit);
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row input.input-text,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row textarea,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row select {
+    width: 100%;
+    box-sizing: border-box;
+    border-color: var(--theme-color-input_bd_color, #F8E0D2);
+    background-color: var(--theme-color-input_bg_color, #FFFFFF);
+    color: var(--theme-color-input_text, inherit);
+    font-weight: 400;
+    line-height: 1.4855em;
+    box-shadow: 0 15px 15px -14px rgba(0, 0, 0, 0.018);
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row input.input-text:hover,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row input.input-text:focus,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row textarea:hover,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row textarea:focus,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row select:hover,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row select:focus {
+    border-color: var(--theme-color-input_bd_hover,
+        var(--theme-color-input_bd_color, #F8E0D2));
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row input.input-text:focus,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row textarea:focus,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row select:focus {
+    color: var(--theme-color-input_text_active,
+        var(--theme-color-input_text, inherit));
+    outline: none;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row input.input-text::placeholder,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row textarea::placeholder {
+    color: var(--theme-color-input_placeholder, inherit);
+    opacity: 1;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row label .required,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.required {
+    color: #FF5B4A !important;
+}
+
+/* v0.10.20 — Match the Qwery/Nails display-name description typography.
+   The description is rendered as #account_display_name_description > em.
+   Use the theme paragraph line-height variable instead of the browser default. */
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+#account_display_name_description {
+    display: block;
+    line-height: var(--theme-font-p_line-height, 1.62em);
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+#account_display_name_description > em {
+    line-height: var(--theme-font-p_line-height, 1.62em);
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.ishi-profile-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: -10px;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.ishi-profile-save-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.ishi-profile-save-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+@media (max-width: 767px) {
+    form.woocommerce-EditAccountForm.edit-account
+    > .woocommerce-MyAccount-content.ishi-profile-account-details
+    .form-row-first,
+    form.woocommerce-EditAccountForm.edit-account
+    > .woocommerce-MyAccount-content.ishi-profile-account-details
+    .form-row-last {
+        width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+
+/* v0.10.21 — Complete the Profile form compatibility bridge. */
+form.woocommerce-EditAccountForm.edit-account {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details {
+    width: 100%;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.clear {
+    clear: both;
+    width: 100%;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row label {
+    margin-top: 0;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row input.input-text,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row textarea,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row select {
+    border-style: solid;
+    border-width: 1px;
+    box-sizing: border-box;
+    transition:
+        border-color 0.3s ease,
+        background-color 0.3s ease,
+        color 0.3s ease;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row input.input-text:hover,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row textarea:hover,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row select:hover,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row input.input-text:focus,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row textarea:focus,
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.form-row select:focus {
+    background-color: var(--theme-color-input_bg_hover,
+        var(--theme-color-input_bg_color, #FFFFFF));
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+#account_display_name_description {
+    display: block;
+    margin-top: 10px;
+    line-height: var(--theme-font-p_line-height, 1.62em);
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+#account_display_name_description > em {
+    line-height: inherit;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.ishi-profile-save-button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+form.woocommerce-EditAccountForm.edit-account
+> .woocommerce-MyAccount-content.ishi-profile-account-details
+.ishi-profile-save-button:active {
+    transform: translateY(1px);
+}
+
+@media (max-width: 767px) {
+    form.woocommerce-EditAccountForm.edit-account
+    > .woocommerce-MyAccount-content.ishi-profile-account-details {
+        max-width: 100%;
+    }
+
+    form.woocommerce-EditAccountForm.edit-account
+    > .woocommerce-MyAccount-content.ishi-profile-account-details
+    .ishi-profile-save-button {
+        max-width: 100%;
+    }
+}
