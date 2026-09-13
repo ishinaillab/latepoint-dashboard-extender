@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through server-side shortcode output composition.
- * Version: 0.10.26
+ * Version: 0.10.24
  * Author: Ishi
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.26');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.24');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
@@ -61,7 +61,6 @@ final class LatePoint_Dashboard_Extender {
         try {
             $output = self::rename_orders_tab($output);
             $output = self::add_press_ons_tab($output);
-            $output = self::add_sample_tab($output);
             $output = self::replace_profile_form($output);
         } finally {
             self::$processing = false;
@@ -239,125 +238,6 @@ final class LatePoint_Dashboard_Extender {
         return $result;
     }
 
-    private static function add_sample_tab($html) {
-        if (!is_string($html) || $html === '' || !class_exists('DOMDocument')) {
-            return $html;
-        }
-
-        $dom = new DOMDocument('1.0', 'UTF-8');
-        $previous = libxml_use_internal_errors(true);
-        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
-
-        if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-            return $html;
-        }
-
-        $xpath = new DOMXPath($dom);
-        $root = $dom->getElementById('latepoint-dashboard-extender-root');
-
-        if (!$root || $xpath->query('.//*[@data-ishi-dashboard-tab="sample"]')->length > 0) {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-            return $html;
-        }
-
-        $trigger_container = $xpath->query(
-            './/*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-triggers ")]'
-        )->item(0);
-
-        if (!$trigger_container) {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-            return $html;
-        }
-
-        $history_trigger = null;
-        $triggers = $xpath->query(
-            './/*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]',
-            $trigger_container
-        );
-
-        foreach ($triggers as $trigger) {
-            if (strpos($trigger->getAttribute('data-tab-target'), 'tab-content-customer-orders') !== false) {
-                $history_trigger = $trigger;
-                break;
-            }
-        }
-
-        $sample_trigger = $dom->createElement('a');
-        $sample_trigger->setAttribute('href', '#');
-        $sample_trigger->setAttribute('class', 'latepoint-tab-trigger');
-        $sample_trigger->setAttribute('data-tab-target', '.tab-content-ishi-customer-sample');
-        $sample_trigger->setAttribute('data-ishi-dashboard-tab', 'sample');
-        $sample_trigger->appendChild($dom->createTextNode('Sample'));
-
-        if ($history_trigger && $history_trigger->nextSibling) {
-            $trigger_container->insertBefore($sample_trigger, $history_trigger->nextSibling);
-        } elseif ($history_trigger) {
-            $trigger_container->appendChild($sample_trigger);
-        } else {
-            $trigger_container->appendChild($sample_trigger);
-        }
-
-        $sample_content = $dom->createElement('div');
-        $sample_content->setAttribute('class', 'latepoint-tab-content tab-content-ishi-customer-sample');
-        $sample_content->setAttribute('data-ishi-dashboard-tab', 'sample');
-
-        $sample_html = do_shortcode('[elementor-template id="18912"]');
-        self::append_html_to_node($dom, $sample_content, $sample_html);
-
-        $orders_content = $xpath->query(
-            './/*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")][contains(concat(" ", normalize-space(@class), " "), " tab-content-customer-orders ")]'
-        )->item(0);
-
-        if ($orders_content && $orders_content->parentNode) {
-            if ($orders_content->nextSibling) {
-                $orders_content->parentNode->insertBefore($sample_content, $orders_content->nextSibling);
-            } else {
-                $orders_content->parentNode->appendChild($sample_content);
-            }
-        } else {
-            $root->appendChild($sample_content);
-        }
-
-        $result = self::serialize_root($dom);
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
-        return $result;
-    }
-
-
-    private static function append_html_to_node($dom, $parent, $html) {
-        if (!is_string($html) || trim($html) === '') {
-            return;
-        }
-
-        // Elementor can return complex HTML containing attributes, inline SVG,
-        // and markup that is not valid XML. appendXML() silently fails for that
-        // output, leaving the tab empty. Parse it as HTML and import the body
-        // nodes instead, while keeping the generated markup intact.
-        $fragment_dom = new DOMDocument('1.0', 'UTF-8');
-        $previous = libxml_use_internal_errors(true);
-        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-sample-fragment">' . $html . '</div></body></html>';
-
-        if ($fragment_dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
-            $fragment_xpath = new DOMXPath($fragment_dom);
-            $fragment_root = $fragment_xpath->query('//*[@id="latepoint-dashboard-extender-sample-fragment"]')->item(0);
-
-            if ($fragment_root) {
-                while ($fragment_root->firstChild) {
-                    $parent->appendChild($dom->importNode($fragment_root->firstChild, true));
-                    $fragment_root->removeChild($fragment_root->firstChild);
-                }
-            }
-        }
-
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
-    }
-
     private static function replace_profile_form($html) {
         if (!is_string($html) || $html === '' || !class_exists('DOMDocument') || !class_exists('OsAuthHelper')) {
             return $html;
@@ -428,10 +308,10 @@ final class LatePoint_Dashboard_Extender {
         $shell->appendChild($email_phone);
 
         $actions = $dom->createElement('p');
-        $actions->setAttribute('class', 'ishi-profile-form-actions');
+        $actions->setAttribute('class', 'woocommerce-form-row form-row');
         $button = $dom->createElement('button');
         $button->setAttribute('type', 'submit');
-        $button->setAttribute('class', 'woocommerce-Button button latepoint-btn latepoint-btn-primary ishi-profile-save-button');
+        $button->setAttribute('class', 'woocommerce-Button button');
         $button->setAttribute('name', 'save_account_details');
         $button->setAttribute('value', __('Save changes', 'latepoint'));
         $button->appendChild($dom->createTextNode(__('Save changes', 'latepoint')));
