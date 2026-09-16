@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.7 - 2026-09-17
+
+- Apply the requested exact primary icon colors, per-control inset shadows and bottom borders; remove the primary navigation wrapper border.
+- Apply the requested translucent gray normal and pink hover/selected submenu colors.
+- Preserve dimensions, focus-visible behavior, navigation and Press-Ons theme integration.
+
 ## 0.11.6 - 2026-09-17
 
 - Use Qwery theme color variables for dashboard navigation, unread badges and Press-Ons additions, including modal content; use system colors when the theme variables are absent.

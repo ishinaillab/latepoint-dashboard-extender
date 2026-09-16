@@ -73,3 +73,8 @@ The checked-in implementation is not evidence that these live staging operations
 ### Theme colors (0.11.6)
 
 Navigation and Press-Ons additions resolve Qwery's existing `--theme-color-*` variables at their rendered location. Primary icons retain `text_dark` across normal, hover and selection. Secondary controls use `alter_bg_color`, hover `alter_bg_hover`, and selected `text_link`, with `text_dark` labels. Focus rings and badge text also use `text_dark` for contrast with the current pale pink scheme. Dividers use `bd_color`; Press-Ons metadata uses `text`. Modal rules reference theme variables directly because native lightboxes can render outside the dashboard root. No theme hex values are copied. System color fallbacks support other themes. Theme scheme changes should be checked for text/focus contrast. Native component styles and LatePoint corner radii remain owned by their providers; dimensions and navigation behavior are unchanged.
+
+
+### Navigation state overrides (0.11.7)
+
+The owner-specified exact navigation colors supersede the 0.11.6 navigation palette: primary normal #242530, hover/selected #f18b96; normal per-control border #00000008 and inset shadow #ddd, hover/selected border and shadow #f18b96. The wrapper has no border. Hover/selected shadow uses the explicitly requested !important override. Submenus use #777b81 text on #777b8120 normally and #f18b96 text on #f18b9630 for hover/selection. These navigation values are intentionally fixed; Press-Ons and focus/badge theme integration remain unchanged.

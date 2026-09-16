@@ -19,7 +19,6 @@
     margin: 0 0 1.25rem;
     padding: 0;
     border: 0;
-    border-bottom: 1px solid var(--ishi-dashboard-border);
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control {
     display: flex;
@@ -32,10 +31,10 @@
     margin: 0;
     padding: .75rem .25rem;
     border: 0;
-    border-bottom: 3px solid transparent;
+    border-bottom: 3px solid #00000008;
     border-radius: 0;
     background: transparent;
-    color: inherit;
+    color: #242530;
     text-decoration: none;
     font-size: 1.5rem;
     line-height: 1;
@@ -44,13 +43,14 @@
     appearance: none;
     text-transform: none;
     letter-spacing: normal;
-    box-shadow: none;
+    box-shadow: inset 0 -1px 0 0 #ddd;
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control::after { content: none; }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:hover,
-.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:focus,
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control[aria-selected="true"] {
-    color: inherit;
+    color: #f18b96;
+    border-bottom-color: #f18b96;
+    box-shadow: inset 0 -1px 0 0 #f18b96 !important;
     background: transparent;
 }
 .ishi-customer-dashboard .ishi-dashboard-icon-label {
@@ -99,8 +99,8 @@
     box-shadow: none;
     border: 1px solid transparent;
     border-radius: 2rem;
-    background: var(--ishi-dashboard-surface);
-    color: var(--ishi-dashboard-ink);
+    background: #777b8120;
+    color: #777b81;
     font-size: .8rem;
     font-weight: 700;
     line-height: 1.2;
@@ -108,12 +108,12 @@
     overflow-wrap: anywhere;
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button:hover {
-    background: var(--ishi-dashboard-soft);
-    color: var(--ishi-dashboard-ink);
+    background: #f18b9630;
+    color: #f18b96;
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button[aria-selected="true"] {
-    background: var(--ishi-dashboard-accent);
-    color: var(--ishi-dashboard-ink);
+    background: #f18b9630;
+    color: #f18b96;
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:focus:not(:focus-visible),
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button:focus:not(:focus-visible) { outline: none; }
@@ -169,7 +169,7 @@
     white-space: nowrap;
 }
 
-/* Selection changes the custom font variant only; the same color and box are retained. */
+/* Selection swaps the font variant; control states own the color and underline. */
 .ishi-customer-dashboard .ishi-dashboard-icon {
     display: block;
     width: 1em;
