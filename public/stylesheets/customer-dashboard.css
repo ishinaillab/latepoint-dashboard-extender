@@ -1,0 +1,130 @@
+/* Layout only. Feature components retain their own styles and behavior. */
+.ishi-customer-dashboard {
+    --ishi-dashboard-accent: #b64d6b;
+    --ishi-dashboard-soft: #fff0f4;
+    --ishi-dashboard-border: #dedede;
+    --ishi-dashboard-ink: #42494d;
+    width: 100%;
+    min-width: 0;
+    color: var(--ishi-dashboard-ink);
+}
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 0;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--ishi-dashboard-border);
+}
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 56px;
+    margin: 0;
+    padding: .75rem .25rem;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control::after { content: none; }
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control[aria-selected="true"] {
+    color: var(--ishi-dashboard-accent);
+    border-bottom-color: currentColor;
+    background: var(--ishi-dashboard-soft);
+}
+.ishi-customer-dashboard .ishi-dashboard-icon-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+.ishi-customer-dashboard.ishi-dashboard-no-icons .ishi-dashboard-icon-label {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    white-space: normal;
+    font-size: .8rem;
+}
+.ishi-customer-dashboard.ishi-dashboard-no-icons .nails_skin_elementor_icons { display: none; }
+.ishi-customer-dashboard .ishi-dashboard-primary-control .lp-new-messages-count {
+    position: absolute;
+    top: .2rem;
+    right: 12%;
+    min-width: 1.25rem;
+    padding: .1rem .25rem;
+    border-radius: 1rem;
+    background: var(--ishi-dashboard-accent);
+    color: #fff;
+    font-size: .75rem;
+    line-height: 1.2;
+    text-align: center;
+}
+.ishi-customer-dashboard .ishi-dashboard-section,
+.ishi-customer-dashboard .latepoint-tab-content { min-width: 0; max-width: 100%; }
+.ishi-customer-dashboard .ishi-dashboard-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > a,
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-actions > a {
+    display: inline-flex;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    margin: 0;
+    padding: .6rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: 2rem;
+    background: #f0f0f0;
+    color: var(--ishi-dashboard-ink);
+    font-size: .95rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > a[aria-selected="true"] {
+    background: var(--ishi-dashboard-soft);
+    color: var(--ishi-dashboard-accent);
+    border-color: var(--ishi-dashboard-accent);
+}
+.ishi-customer-dashboard .ishi-dashboard-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-block: 0 1rem; }
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-actions > a { background: transparent; border-color: var(--ishi-dashboard-border); }
+.latepoint-w .ishi-customer-dashboard a:focus-visible,
+.latepoint-w .ishi-customer-dashboard [role="tabpanel"]:focus-visible {
+    outline: 3px solid var(--ishi-dashboard-accent);
+    outline-offset: 3px;
+}
+/* Our explicit rules outrank LatePoint's .active display rules without !important. */
+.ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-section[hidden],
+.ishi-customer-dashboard[data-ishi-enhanced] .latepoint-tab-content[hidden],
+.ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-secondary[hidden],
+.latepoint-w .ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-actions > a[hidden] { display: none; }
+/* Before enhancement (or without JS), anchor links reach real server-rendered views. */
+.ishi-customer-dashboard:not([data-ishi-enhanced]) .latepoint-tab-content[data-ishi-view] { display: block; margin-block: 1rem; }
+.ishi-customer-dashboard:not([data-ishi-enhanced]) .ishi-dashboard-section { margin-bottom: 2rem; }
+@media (min-width: 768px) {
+    .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control { min-height: 64px; font-size: 1.65rem; }
+    .ishi-customer-dashboard .ishi-dashboard-section { padding-inline: .25rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ishi-customer-dashboard { scroll-behavior: auto; }
+}

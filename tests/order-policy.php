@@ -5,7 +5,6 @@ if (in_array('--without-woocommerce', $argv, true)) {
     require __DIR__ . '/run.php';
     function absint($value) { return abs((int) $value); }
     function is_user_logged_in() { return true; }
-    function __($text, $domain = '') { return $text; }
     define('LATEPOINT_STATUS_ERROR', 'error');
     $controller = new OsIshiPressOnsController();
     $controller->params = array('order_id' => 1);

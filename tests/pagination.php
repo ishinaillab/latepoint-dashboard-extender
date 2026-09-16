@@ -15,7 +15,6 @@ if (!function_exists('wc_get_orders')) {
     function get_current_user_id() { return 7; }
     function get_option($name, $default = false) { return $name === 'posts_per_page' ? $GLOBALS['paging_default'] : $default; }
     function apply_filters($tag, $value, ...$args) { return test_apply($tag, $value, ...$args); }
-    function __($text, $domain = '') { return $text; }
     function absint($value) { return abs((int) $value); }
     function sanitize_html_class($value) { return $value; }
     function esc_attr($value) { return htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); }

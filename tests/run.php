@@ -57,10 +57,19 @@ function test_action_output($tag, ...$args) {
         ob_end_clean();
     }
 }
+function __($text, $domain = '') { return $text; }
+function wp_unique_id($prefix = '') { static $id = 0; return $prefix . ++$id; }
 function shortcode_exists($tag) {
+    if ($tag === 'ishi_latepoint_profile') { return !empty($GLOBALS['profile_enabled']); }
     return $tag === 'ishi_customer_addresses' && $GLOBALS['address_enabled'];
 }
 function do_shortcode($input) {
+    if ($input === '[ishi_latepoint_profile]') {
+        $GLOBALS['profile_calls']++;
+        $result = $GLOBALS['profile_output'];
+        if ($result instanceof Throwable) { throw $result; }
+        return is_callable($result) ? $result() : $result;
+    }
     if ($input !== '[ishi_customer_addresses]') {
         throw new RuntimeException('Unexpected shortcode');
     }
@@ -151,30 +160,22 @@ function xpath_for($html) {
 function sequence($html) {
     $result = array();
     foreach (xpath_for($html)->query('//*[contains(concat(" ", normalize-space(@class), " "), " customer-dashboard-tabs ")]/a') as $tab) {
-        $result[] = $tab->getAttribute('data-tab-target');
+        $result[] = $tab->hasAttribute('data-ishi-primary') ? $tab->getAttribute('data-ishi-primary') : $tab->getAttribute('data-tab-target');
     }
     return $result;
 }
-$expected = array(
-    '.tab-content-customer-bookings',
-    '.tab-content-customer-orders',
-    '.tab-content-ishi-customer-press-ons',
-    '.tab-content-customer-info-form',
-    '.tab-content-ishi-customer-addresses',
-    '.tab-content-customer-new-appointment-form',
-    '.tab-content-customer-booking-messages',
-);
+$expected = array('appointments', 'press-ons', 'messages', 'account');
 $output = render_dashboard(dashboard());
 check($GLOBALS['shortcode_calls'] === 1, 'Shortcode runs exactly once, with the controller loaded');
 check($GLOBALS['fallback_calls'] === 0, 'No fallback address UI is built when shortcode exists');
-check(sequence($output) === $expected, 'All seven tabs use the requested order');
+check(sequence($output) === $expected, 'Four primary sections use the requested order');
 $x = xpath_for($output);
 check($x->query('//form[@class="address-form"]')->length === 1, 'Only one address form');
 check($x->query('//input[@name="address"]')->item(0)->getAttribute('value') === 'A & B', 'HTML form attributes preserved');
 check(strpos($output, '住所') !== false, 'Unicode shortcode content preserved');
 check($x->query('//span[@class="lp-new-messages-count"]')->item(0)->textContent === '3', 'Unread badge preserved');
 check($x->query('//a[contains(@class,"latepoint-trigger-messages-tab")]')->length === 1, 'Messages click-hook class preserved');
-check($x->query('//a[contains(@class,"active")]')->item(0)->getAttribute('data-tab-target') === $expected[0], 'Active tab preserved');
+check($x->query('//a[contains(@class,"active")]')->item(0)->getAttribute('data-tab-target') === '.tab-content-customer-bookings', 'Active tab preserved');
 check($x->query('//input[@name="customer[first_name]"]')->item(0)->getAttribute('value') === 'Unchanged', 'Profile input preserved');
 render_dashboard($output);
 check($GLOBALS['shortcode_calls'] === 1, 'Existing Addresses panel is not rendered again');

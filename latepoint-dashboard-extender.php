@@ -2,7 +2,8 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through native tab hooks and server-side navigation customization.
- * Version: 0.10.32
+ * Version: 0.11.0
+ * Text Domain: latepoint-dashboard-extender
  * Author: Ishi
  */
 
@@ -10,14 +11,16 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.32');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.11.0');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
+require_once LATEPOINT_DASHBOARD_EXTENDER_PATH . 'lib/dashboard-layout.php';
 
 final class LatePoint_Dashboard_Extender {
 
     private static $rendering_custom_tabs = false;
     private static $dashboard_tab_frames = array();
+    private static $icons_available = false;
 
     public static function init() {
         add_filter('do_shortcode_tag', array(__CLASS__, 'filter_customer_dashboard_output'), 20, 4);
@@ -42,101 +45,35 @@ final class LatePoint_Dashboard_Extender {
             array(),
             LATEPOINT_DASHBOARD_EXTENDER_VERSION
         );
+        // This is the existing uploaded font, not an Elementor runtime dependency.
+        $icon_handle = 'elementor-icons-nails_skin_elementor_icons';
+        if (wp_style_is($icon_handle, 'registered')) {
+            wp_enqueue_style($icon_handle);
+            self::$icons_available = true;
+        } else {
+            $uploads = wp_upload_dir();
+            $relative = '/elementor/custom-icons/nails_skin_elementor_icons/css/nails_skin_elementor_icons.css';
+            if (empty($uploads['error']) && is_readable($uploads['basedir'] . $relative)) {
+                wp_enqueue_style($icon_handle, $uploads['baseurl'] . $relative, array(), (string) filemtime($uploads['basedir'] . $relative));
+                self::$icons_available = true;
+            }
+        }
+        wp_enqueue_style('ishi-customer-dashboard', LATEPOINT_DASHBOARD_EXTENDER_URL . 'public/stylesheets/customer-dashboard.css', array('latepoint-main-front', 'latepoint-dashboard-extender'), LATEPOINT_DASHBOARD_EXTENDER_VERSION);
+        wp_enqueue_script('ishi-customer-dashboard', LATEPOINT_DASHBOARD_EXTENDER_URL . 'public/javascripts/customer-dashboard.js', array('latepoint-main-front'), LATEPOINT_DASHBOARD_EXTENDER_VERSION, true);
     }
 
     public static function filter_customer_dashboard_output($output, $tag, $attr, $m) {
-        return self::order_customer_dashboard_tabs($output, $tag, $attr, $m);
+        return $tag === 'latepoint_customer_dashboard' ? self::transform_customer_dashboard_html($output) : $output;
     }
 
+    /** Explicit adapter for custom renderers. Pass native dashboard HTML before JSON encoding. */
+    public static function transform_customer_dashboard_html($html) {
+        return Ishi_Customer_Dashboard_Layout::transform($html, self::requested_press_ons_page() > 0, self::$icons_available);
+    }
+
+    /** Backward-compatible adapter name; the layout is now hierarchical. */
     public static function order_customer_dashboard_tabs($html, $tag, $attr, $m) {
-        if ($tag !== 'latepoint_customer_dashboard' || !is_string($html) || $html === '' || !class_exists('DOMDocument')) {
-            return $html;
-        }
-
-        // Stable target selectors, independent of translated labels and badges.
-        $targets = array(
-            '.tab-content-customer-bookings',
-            '.tab-content-customer-orders',
-            '.tab-content-ishi-customer-press-ons',
-            '.tab-content-customer-info-form',
-            '.tab-content-ishi-customer-addresses',
-            '.tab-content-customer-new-appointment-form',
-            '.tab-content-customer-booking-messages',
-        );
-        $dom = new DOMDocument('1.0', 'UTF-8');
-        $previous = libxml_use_internal_errors(true);
-
-        try {
-            $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
-            if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
-                return $html;
-            }
-
-            $xpath = new DOMXPath($dom);
-            $root = $dom->getElementById('latepoint-dashboard-extender-root');
-            if (!$root) {
-                return $html;
-            }
-            $containers = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " customer-dashboard-tabs ")]', $root);
-            $changed = false;
-            foreach ($containers as $container) {
-                $nodes = array();
-                $original = array();
-                // Only direct navigation children; never touch nested tabs or panels.
-                foreach ($xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]', $container) as $trigger) {
-                    $target = $trigger->getAttribute('data-tab-target');
-                    if (!in_array($target, $targets, true)) {
-                        continue;
-                    }
-                    if (isset($nodes[$target])) {
-                        // Ambiguous markup: preserve the original output in full.
-                        return $html;
-                    }
-                    $nodes[$target] = $trigger;
-                    $original[] = $target;
-                }
-                if (isset($nodes['.tab-content-customer-orders'])) {
-                    foreach ($xpath->query('.//text()', $nodes['.tab-content-customer-orders']) as $label) {
-                        if (preg_match('/^\\s*Orders\\s*$/i', $label->nodeValue)) {
-                            $label->nodeValue = preg_replace('/\\bOrders\\b/i', 'History', $label->nodeValue, 1);
-                            $changed = true;
-                            break;
-                        }
-                    }
-                }
-                // Native hooks create the tabs before this filter. Pagination
-                // changes selection here, within this dashboard's own wrapper.
-                if (self::requested_press_ons_page() && isset($nodes['.tab-content-ishi-customer-press-ons'])) {
-                    $wrapper = $xpath->query('ancestor::*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tabs-w ")][1]', $container)->item(0);
-                    $panel = $wrapper ? $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " tab-content-ishi-customer-press-ons ")]', $wrapper)->item(0) : null;
-                    if ($panel) {
-                        self::activate_press_ons_tab($xpath, $container, $nodes['.tab-content-ishi-customer-press-ons'], $panel);
-                        $changed = true;
-                    }
-                }
-                $ordered = array_values(array_intersect($targets, $original));
-                if ($ordered === $original) {
-                    continue;
-                }
-
-                // Replace only known-tab slots, preserving unknown tabs in place.
-                $slots = array();
-                foreach ($original as $target) {
-                    $slot = $dom->createComment('ishi-tab-slot');
-                    $container->replaceChild($slot, $nodes[$target]);
-                    $slots[] = $slot;
-                }
-                foreach ($ordered as $index => $target) {
-                    $container->replaceChild($nodes[$target], $slots[$index]);
-                }
-                $changed = true;
-            }
-
-            return $changed ? self::serialize_root($dom) : $html;
-        } finally {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-        }
+        return self::filter_customer_dashboard_output($html, $tag, $attr, $m);
     }
 
     /**
@@ -671,26 +608,6 @@ final class LatePoint_Dashboard_Extender {
         $nav->appendChild($link);
     }
 
-    private static function activate_press_ons_tab($xpath, $trigger_container, $press_trigger, $press_content) {
-        if (!self::requested_press_ons_page()) {
-            return;
-        }
-        $wrapper = $xpath->query('ancestor::*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tabs-w ")][1]', $trigger_container)->item(0);
-        if (!$wrapper) {
-            return;
-        }
-        foreach (array(
-            $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]', $trigger_container),
-            $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")]', $wrapper),
-        ) as $nodes) {
-            foreach ($nodes as $node) {
-                $node->setAttribute('class', trim(preg_replace('/(^|\s)active(?=\s|$)/', '', $node->getAttribute('class'))));
-            }
-        }
-        $press_trigger->setAttribute('class', $press_trigger->getAttribute('class') . ' active');
-        $press_content->setAttribute('class', $press_content->getAttribute('class') . ' active');
-    }
-
     /**
      * Shared by the paginated list and lightbox. Always re-check ownership and
      * visibility at request time, even when the query already restricts them.
@@ -738,21 +655,6 @@ final class LatePoint_Dashboard_Extender {
         return $has_product_line_item;
     }
 
-    private static function serialize_root($dom) {
-        $root = $dom->getElementById('latepoint-dashboard-extender-root');
-
-        if (!$root) {
-            return '';
-        }
-
-        $result = '';
-
-        foreach ($root->childNodes as $child) {
-            $result .= $dom->saveHTML($child);
-        }
-
-        return $result;
-    }
 }
 
 LatePoint_Dashboard_Extender::init();

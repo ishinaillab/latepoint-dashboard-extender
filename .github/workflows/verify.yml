@@ -40,3 +40,13 @@ jobs:
         run: php tests/order-policy.php
       - name: Test lightbox without WooCommerce
         run: php tests/order-policy.php --without-woocommerce
+      - name: Test server layout and asset contracts
+        run: |
+          php tests/layout.php
+          php tests/assets.php
+      - name: Install isolated browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/ishi-browser-tests" --no-save --ignore-scripts --no-audit --no-fund playwright@1.62.1
+          "$RUNNER_TEMP/ishi-browser-tests/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Test keyboard, responsive layout and component event preservation
+        run: NODE_PATH="$RUNNER_TEMP/ishi-browser-tests/node_modules" node tests/browser.cjs

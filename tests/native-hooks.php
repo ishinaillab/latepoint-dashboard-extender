@@ -44,7 +44,7 @@ check(xpath_for($first . $second)->query('//form[@id="native-addresses"]')->leng
 $GLOBALS['messages_enabled'] = false;
 check(test_action_output('latepoint_customer_dashboard_after_tab_contents', $customer) === '', 'No orphan content emitted after frames are consumed');
 $without_messages = render_dashboard(dashboard());
-check(sequence($without_messages) === array_slice($expected, 0, 6), 'Messages can be disabled without disturbing custom tabs');
+check(sequence($without_messages) === array('appointments', 'press-ons', 'account'), 'Messages can be disabled without disturbing custom tabs');
 
 // Content must use the fragment prepared at the trigger hook even if providers change.
 $before = $GLOBALS['shortcode_calls'];

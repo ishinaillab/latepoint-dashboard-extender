@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0 - 2026-09-16
+
+- Group the server-rendered dashboard into Appointments, Press-Ons, Messages and Account.
+- Compose Ishi Profile through its existing shortcode and preserve native panels and feature handlers.
+- Add keyboard-operable hierarchical navigation, responsive scoped styles and the existing Nails icon asset.
+- Keep New Appointment as an Appointments action; preserve Press-Ons pagination selection.
+- Expose an explicit HTML adapter for custom renderers; keep unknown or ambiguous markup in its original layout.
+
+
 ## 0.10.32 - 2026-09-16
 
 - Share ownership, type/status visibility, and category eligibility between Press-Ons lists and lightboxes.

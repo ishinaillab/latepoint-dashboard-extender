@@ -1,30 +1,39 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.10.32**
+Current version: **0.11.0**
 
-Adds Press-Ons and Addresses through LatePoint's native dashboard hooks while retaining native tab switching and lightboxes.
+Organizes LatePoint's Customer Dashboard with server-rendered primary and secondary navigation while retaining its existing feature components.
 
-## Dashboard behavior
+## Dashboard layout
 
-Tab order: **Appointments → History → Press-Ons → Profile → Addresses → New Appointment → Messages**.
+| Primary section | Views |
+| --- | --- |
+| Appointments | Appointments, History; New Appointment action |
+| Press-Ons | Existing WooCommerce order cards and lightbox |
+| Messages | Native LatePoint Pro conversations |
+| Account | Ishi Profile, Ishi Addresses |
 
-Missing optional tabs are skipped. Unknown add-on tabs retain their positions.
+Primary controls use the existing Nails icon font with accessible names. Appointments and Account have secondary navigation. Single-view sections do not. Missing optional providers are omitted; unknown add-on targets or ambiguous markup preserve the original dashboard rather than discard functionality.
 
-Addresses uses `[ishi_customer_addresses]` when registered. Otherwise, it renders the existing WooCommerce billing/shipping display if WooCommerce's account endpoint API is available. The shortcode and fallback are never both rendered. An empty shortcode response stays empty; an invalid response omits both the Addresses link and panel.
+Profile uses the registered `[ishi_latepoint_profile]` component once per dashboard, replacing the native profile panel's contents. If that provider is unavailable or returns an invalid non-string result, the native profile remains. An intentional empty string remains empty. Addresses still uses `[ishi_customer_addresses]` once, or the existing WooCommerce fallback when its endpoint API is available. Neither integration duplicates form/save logic.
 
-The Addresses shortcode belongs to a separate plugin. Its own validation, saving, and scripts remain that plugin's responsibility.
+## Integration and state
 
-## Native tab integration
+LatePoint's native dashboard hooks continue to create Press-Ons and Addresses. The existing WordPress `do_shortcode_tag` filter groups the finished dashboard HTML on the server for `latepoint_customer_dashboard` and the block that uses that shortcode. JavaScript only selects existing views, coordinates accessibility and manages keyboard focus.
 
-- `latepoint_customer_dashboard_after_tabs` prepares each custom tab once and emits its link (priority 20).
-- `latepoint_customer_dashboard_after_tab_contents` emits the matching prepared panels (priority 20).
-- Messages remains owned by Pro Features, whose callbacks run at priority 10.
-- Per-render frames pair links and panels, including repeated dashboards for the same customer. Nested rendering is isolated; recursive custom-tab rendering is suppressed and failures release the pending frame.
-- One shortcode-output filter uses a single DOM pass to rename Orders to History, reorder existing links, and select Press-Ons for pagination. They no longer create custom tabs.
+The inspected LatePoint version has no shared final-render hook or supported controller/template substitution filter. Direct custom PHP renderers must pass their native HTML through the explicit adapter **before JSON encoding or sending the response**:
 
-Native hooks also add links/panels when the dashboard is rendered directly by its controller. The configured ordering, History label, and pagination selection still require the `latepoint_customer_dashboard` shortcode filter path (also used by the dashboard block). Direct controller/AJAX output has no new final-output hook in this release; test any custom direct-render integration separately.
+```php
+$html = LatePoint_Dashboard_Extender::transform_customer_dashboard_html($html);
+```
 
-A template that omits the native hooks will not receive these custom tabs. There is deliberately no second HTML-insertion path that could duplicate them. PHP DOM is still required to build the Press-Ons cards and apply navigation transformations.
+The caller must already have rendered authorized dashboard HTML and arranged the normal LatePoint/component assets and initialization. This adapter does not authenticate users or intercept arbitrary controller responses. Unmodified direct-controller output retains its native layout.
+
+The retained active content panel is the selection authority. Primary selection, secondary selection, visibility and ARIA derive from it. The redesigned navigation omits LatePoint's flat `latepoint-tab-triggers` delegation class, whose descendant-wide clearing conflicts with nested navigation. Native feature trigger classes, data attributes and bubbling events remain available, including Pro Messages. There is no additional URL/hash router or per-section state store. Press-Ons pagination retains its existing query parameter behavior.
+
+Arrow keys and Home/End move tab focus; Enter/Space activate. Booking navigation provides a return action and predictable focus. Before JavaScript enhancement, the owned views are server-rendered and reachable with anchor links. This does not make JavaScript-dependent native forms or messaging work without their required scripts.
+
+Layout assets use WordPress enqueue dependencies on LatePoint's frontend handle. The existing `elementor-icons-nails_skin_elementor_icons` stylesheet is reused when registered, otherwise its verified path under the site's uploads directory is enqueued if readable. Font files are not copied. If unavailable, controls display text labels. No Elementor runtime or fixed dashboard page URL is required.
 
 ## Press-Ons pagination
 
@@ -38,18 +47,19 @@ This avoids loading every order at once, but deep pages or histories dominated b
 
 Both the dashboard list and lightbox use the same ownership, viewable order type/status, and category eligibility check. The lightbox re-checks these rules on every request and returns an error when WooCommerce's order API is unavailable.
 
-## Dependencies
+## Dependencies and compatibility
 
-- WordPress and LatePoint.
-- PHP DOM/libxml for dashboard composition.
-- WooCommerce for Press-Ons order data and the fallback Addresses UI.
-- LatePoint Pro Features with Messages enabled to display Messages.
+- WordPress, LatePoint and PHP DOM/libxml.
+- WooCommerce for Press-Ons and fallback Addresses.
+- Ishi Profile/Addresses providers for the intended Account components.
+- LatePoint Pro Features with Messages enabled for Messages.
+- Existing Nails custom icon stylesheet/font for icon-only presentation.
 
-The dashboard structure was inspected against local copies of LatePoint 5.6.11 and Pro Features 1.6.4. This is not a claim that every version or live site combination has been tested.
+The installed sources inspected for this layout were LatePoint 5.6.10 and Ishi Profile 1.4.0. The Pro archive reports 1.6.3 while the site's asset version reports 1.6.4; the actual downloaded message implementation was inspected. These observations do not establish compatibility with every upstream version. See [integration notes](docs/dashboard-layout.md) for extension points, limitations and staging checks.
 
 ## Verification
 
-Run with PHP CLI and the DOM extension:
+Run PHP CLI with DOM enabled:
 
 ```sh
 php tests/run.php
@@ -58,21 +68,20 @@ php tests/pagination.php
 php tests/native-hooks.php
 php tests/order-policy.php
 php tests/order-policy.php --without-woocommerce
+php tests/layout.php
+php tests/assets.php
 ```
 
-GitHub Actions runs PHP syntax checks and the Addresses/tab, pagination, and native-hook regression suites on pushes to `main-features`, pull requests, and manual dispatch. The workflow uses the PHP runtime supplied by `ubuntu-24.04` and prints its version.
+GitHub Actions runs PHP lint, these isolated regression suites and Playwright browser checks. Browser tests use synthetic customer data and feature-event doubles: they verify navigation, ARIA references, keyboard/focus, responsive widths, pagination selection, independent layout instances, component replacement and initialization idempotence. They do not perform real WordPress saves, booking, payment or messaging requests.
 
-The standalone tests use small WordPress/WooCommerce doubles. They verify single Addresses rendering, fallback behavior, empty/invalid responses, Unicode and form preservation, exception cleanup, tab ordering, Messages badges, optional/unknown tabs, and release-version consistency. Native-hook tests also cover matching trigger/panel output, Pro Messages coexistence, repeated and nested renders, recursion guards, and cleanup after failures. They do not replace a live WordPress integration test.
+To run the browser suite locally, install Playwright 1.62.1 in a separate test directory, install its Chromium browser, set `NODE_PATH` to that directory's `node_modules`, then run `node tests/browser.cjs`. Optional `PHP_BINARY` and `CHROME_BINARY` choose existing executables. No Node dependency is required by the deployed plugin.
 
 ## Release checklist
 
-1. Update the plugin header version, runtime version constant, this README, and CHANGELOG together.
-2. Require passing syntax and regression checks for the exact release commit.
-3. On staging, verify address editing/saving and notices, all seven tabs, Messages unread counts/conversations, Press-Ons lightboxes, and mobile layout.
-4. Repeat the Addresses check with its shortcode plugin disabled to confirm the fallback.
-5. Confirm behavior for logged-out visitors and customers without orders or appointments.
-6. Test Press-Ons with more than one page, mixed/excluded orders, Previous/Next, and the site's configured page size. Verify both HPOS and legacy order storage when those modes are supported by the deployment.
-7. Verify the installed dashboard template fires both native hooks. Check a page with two dashboard shortcodes and any custom direct-controller integrations.
-8. Record the WordPress, PHP, LatePoint, Pro Features, and WooCommerce versions actually tested before tagging or deploying a release.
+1. Keep plugin header, version constant, README and CHANGELOG in sync; require green checks for the exact release commit.
+2. Complete the staging matrix in [integration notes](docs/dashboard-layout.md), including real Profile/password/Addresses saves, conversations, booking return, logged-out access and PHP/browser logs.
+3. Test multi-page Press-Ons and lightboxes with mixed/excluded orders, configured page sizes and supported WooCommerce storage modes.
+4. Verify optional-provider fallback, native hooks, multiple instances and any custom direct-render/AJAX integration.
+5. Record the WordPress, PHP, LatePoint, Pro, Ishi and WooCommerce versions actually tested before tagging or deploying.
 
-GitHub commits do not deploy this plugin to WordPress automatically.
+GitHub commits do not deploy this plugin to WordPress automatically. Version 0.11.0 requires staging integration validation; the previous stable release remains available.
