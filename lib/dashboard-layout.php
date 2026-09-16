@@ -16,44 +16,19 @@ final class Ishi_Customer_Dashboard_Layout {
         return $node;
     }
 
-    /** Original paired SVG artwork; no external font, spritesheet or runtime dependency. */
+    /** Verified class names from the site's Ishi custom icon package. */
     private static function icon($dom, $name) {
-        $paths = array(
-            'appointments' => array(
-                'M6 4h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z M8 2v4 M16 2v4 M4 9h16 M8 13h.01 M12 13h.01 M16 13h.01 M8 17h.01 M12 17h.01',
-                'M8 1a1 1 0 0 1 1 1v1h6V2a1 1 0 0 1 2 0v1h1a3 3 0 0 1 3 3v13a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h1V2a1 1 0 0 1 1-1Z M5 8v2h14V8Z M7 12v2h2v-2Z M11 12v2h2v-2Z M15 12v2h2v-2Z M7 16v2h2v-2Z M11 16v2h2v-2Z'
-            ),
-            'press-ons' => array(
-                'M6.5 17V8a5.5 5.5 0 0 1 11 0v9c0 3-2 4.5-5.5 4.5S6.5 20 6.5 17Z M6.7 17c2.8-3 7.8-3 10.6 0',
-                'M12 1.5a6.5 6.5 0 0 1 6.5 6.5v9c0 3.6-2.6 5.5-6.5 5.5S5.5 20.6 5.5 17V8A6.5 6.5 0 0 1 12 1.5Z M7.5 17.5c2.5-2.5 6.5-2.5 9 0v-2c-2.5-2-6.5-2-9 0Z'
-            ),
-            'messages' => array(
-                'M5 3h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-1-2V5a2 2 0 0 1 2-2Z M7 10h.01 M12 10h.01 M17 10h.01',
-                'M5 2h14a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H9.4l-4.8 3.8A1 1 0 0 1 3 22v-3.8A3 3 0 0 1 2 16V5a3 3 0 0 1 3-3Z M6 9v2h2V9Z M11 9v2h2V9Z M16 9v2h2V9Z'
-            ),
-            'account' => array(
-                'M16 6a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z M4 21v-2a8 7 0 0 1 16 0v2Z',
-                'M17 6A5 5 0 1 1 7 6a5 5 0 0 1 10 0Z M12 11c5 0 9 3.6 9 8v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2c0-4.4 4-8 9-8Z'
-            ),
-        );
-        $svg = $dom->createElementNS('http://www.w3.org/2000/svg', 'svg');
-        foreach (array('class' => 'ishi-dashboard-icon', 'viewBox' => '0 0 24 24', 'width' => '24', 'height' => '24', 'aria-hidden' => 'true', 'focusable' => 'false') as $key => $value) { $svg->setAttribute($key, $value); }
-        foreach (array('outline', 'solid') as $index => $variant) {
-            $shape = $dom->createElementNS('http://www.w3.org/2000/svg', 'path');
-            $shape->setAttribute('class', 'ishi-dashboard-icon-' . $variant);
-            $shape->setAttribute('d', $paths[$name][$index]);
-            $shape->setAttribute('fill', $index ? 'currentColor' : 'none');
-            if ($index) { $shape->setAttribute('fill-rule', 'evenodd'); }
-            else {
-                foreach (array('stroke' => 'currentColor', 'stroke-width' => '1.75', 'stroke-linecap' => 'round', 'stroke-linejoin' => 'round') as $key => $value) { $shape->setAttribute($key, $value); }
-            }
-            $svg->appendChild($shape);
+        $names = array('appointments' => 'calendar', 'press-ons' => 'nail', 'messages' => 'chat', 'account' => 'avatar');
+        $icon = self::element($dom, 'span', array('class' => 'ishi-dashboard-icon', 'aria-hidden' => 'true'));
+        foreach (array('outline' => 'outlined', 'solid' => 'filled') as $state => $variant) {
+            $icon->appendChild(self::element($dom, 'i', array(
+                'class' => 'ishi-dashboard-icon-' . $state . ' ishi_custom_icon-' . $names[$name] . '-' . $variant,
+            )));
         }
-        return $svg;
+        return $icon;
     }
 
     /** Raw native HTML in, grouped HTML out; never intercept JSON or whole-page output. */
-    // Third argument retained for adapter compatibility; SVGs do not require a font.
     public static function transform($html, $press_ons_page = false, $icons_available = true) {
         if (self::$rendering || !is_string($html) || $html === '' || !class_exists('DOMDocument')) { return $html; }
         $dom = new DOMDocument('1.0', 'UTF-8');
@@ -114,7 +89,7 @@ final class Ishi_Customer_Dashboard_Layout {
                     }
                 }
                 $prefix = wp_unique_id('ishi-dashboard-');
-                $wrapper->setAttribute('class', $wrapper->getAttribute('class') . ' ishi-customer-dashboard');
+                $wrapper->setAttribute('class', $wrapper->getAttribute('class') . ' ishi-customer-dashboard' . ($icons_available ? '' : ' ishi-dashboard-no-icons'));
                 $wrapper->setAttribute('data-ishi-layout', '1');
                 $labels = array(
                     'appointments' => __('Appointments', 'latepoint-dashboard-extender'),

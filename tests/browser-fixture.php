@@ -19,6 +19,9 @@ $raw = str_replace('>Native orders</div>', '><h2>History</h2><p>Your previous ap
 $raw = str_replace('>Chat</div>', '><div class="latepoint-chat-box-w" data-route="messages__messages_for_booking" data-check-unread-route="messages__check_unread_messages"><div class="lc-contents"><div class="lc-conversations"><button class="lc-conversation lc-selected" data-booking-id="101">Conversation one</button><button class="lc-conversation" data-booking-id="102">Conversation two</button></div><div class="lcb-content"><div class="booking-messages-list">Initial conversation</div><div class="os-booking-messages-input-w" data-author-type="customer" data-booking-id="101"><input class="os-booking-messages-input" aria-label="Message"><button class="os-bm-send-btn">Send</button></div></div></div></div></div>', $raw);
 $raw = str_replace('>Book</div>', '><button type="button" class="latepoint-book-button os_trigger_booking">Open booking</button></div>', $raw);
 if (in_array('--double', $argv, true)) { $raw .= $raw; }
+// Isolated browser fixture supplies the font asset separately from WordPress.
+$icons = new ReflectionProperty(LatePoint_Dashboard_Extender::class, 'icons_available');
+$icons->setValue(null, !in_array('--missing-icons', $argv, true));
 $html = render_dashboard($raw);
 $css = file_get_contents(dirname(__DIR__) . '/public/stylesheets/customer-dashboard.css');
 $cards_css = file_get_contents(dirname(__DIR__) . '/public/stylesheets/press-ons.css');

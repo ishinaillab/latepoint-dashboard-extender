@@ -1,6 +1,6 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.11.4**
+Current version: **0.11.5**
 
 Organizes LatePoint's Customer Dashboard with server-rendered primary and secondary navigation while retaining its existing feature components.
 
@@ -13,7 +13,7 @@ Organizes LatePoint's Customer Dashboard with server-rendered primary and second
 | Messages | Native LatePoint Pro conversations |
 | Account | Ishi Profile, Ishi Addresses |
 
-Primary controls use original paired inline SVGs with accessible names: outline when inactive, filled when selected. Selection follows the existing `aria-selected` state; no separate icon state or JavaScript handler is introduced. Appointments, Press-Ons and Account have secondary navigation. Messages remains a single view. Missing optional providers are omitted; unknown add-on targets or ambiguous markup preserve the original dashboard rather than discard functionality.
+Primary controls use the supplied Ishi custom icon font with accessible names: outline when inactive, filled when selected. Calendar maps to Appointments, nail to Press-Ons, chat to Messages, and avatar to Account. Selection follows the existing `aria-selected` state; no separate icon state or JavaScript handler is introduced. Appointments, Press-Ons and Account have secondary navigation. Messages remains a single view. Missing optional providers are omitted; unknown add-on targets or ambiguous markup preserve the original dashboard rather than discard functionality.
 
 Profile uses the registered `[ishi_latepoint_profile]` component once per dashboard, replacing the native profile panel's contents. If that provider is unavailable or returns an invalid non-string result, the native profile remains. An intentional empty string remains empty. Addresses still uses `[ishi_customer_addresses]` once, or the existing WooCommerce fallback when its endpoint API is available. Neither integration duplicates form/save logic.
 
@@ -33,7 +33,7 @@ The retained active content panel is the selection authority. Primary selection,
 
 Navigation uses non-submitting buttons without hash destinations, preventing browser/theme anchor scrolling. Arrow keys and Home/End move focus without scrolling; Enter/Space activate. New Appointment is the third Appointments submenu, after History; this submenu stays on one row and scrolls horizontally on narrow screens instead of wrapping; its sibling submenus remain available to return. Before JavaScript enhancement, all owned views remain server-rendered and visible. This does not make JavaScript-dependent native forms or messaging work without their required scripts.
 
-Layout assets use WordPress enqueue dependencies on LatePoint's frontend handle. Primary SVGs are authored in the plugin and rendered server-side with decorative `aria-hidden`/`focusable=false` semantics; the buttons retain their accessible names. There are no external icon/font requests, copied font files, Elementor runtime or fixed dashboard page URL dependencies. The inspected Nails font had no matching nail/avatar outline-and-filled pairs, so all four primary icons use a consistent SVG set.
+Layout assets use WordPress enqueue dependencies on LatePoint's frontend handle. The font class prefix is `ishi_custom_icon-`; the verified pairs are calendar/nail/chat/avatar with `-outlined` and `-filled` suffixes. A registered `ishi_custom_icons.css` is reused when available. Otherwise the plugin enqueues the verified existing `elementor/custom-icons/ishi_custom_icons-1/css/ishi_custom_icons.css` beneath `wp_upload_dir()`; no domain or dashboard page URL is hard-coded, and no font files are copied. The -1 suffix is the installed Elementor icon-set name, not the ZIP's original folder name. Keep this uploaded set available when migrating the site; a relocated set can use normal WordPress stylesheet registration. If no stylesheet is available, primary controls show text labels with a bold selected label. The icon elements are decorative; button names, keyboard focus and unread badges remain accessible.
 
 Submenus use `.8rem` font size, `1.2` line height, `700` font weight and a `40px` minimum height. Selected primary menus use only the filled icon, with unchanged text/icon color and transparent background. Secondary menus retain their existing selected color/background. Keyboard focus remains visible. Each content section has 20px horizontal padding. The native Welcome/logout header pair is removed from adapted output using its verified structure and logout route, without changing authentication or other logout interfaces. A single grid gap provides 40px between the submenu row and its content, with native outer top spacing normalized.
 
@@ -88,4 +88,4 @@ To run the browser suite locally, install Playwright 1.62.1 in a separate test d
 4. Verify optional-provider fallback, native hooks, multiple instances and any custom direct-render/AJAX integration.
 5. Record the WordPress, PHP, LatePoint, Pro, Ishi and WooCommerce versions actually tested before tagging or deploying.
 
-GitHub commits do not deploy this plugin to WordPress automatically. Version 0.11.3 is the site owner’s tested baseline. Version 0.11.4 changes only primary icon presentation and its asset dependency; verify the icons with the installed theme before deployment.
+GitHub commits do not deploy this plugin to WordPress automatically. Version 0.11.3 is the site owner’s tested baseline. Version 0.11.5 replaces the 0.11.4 SVG artwork with the supplied custom font pairs and enqueues the existing uploaded asset; verify the icons with the installed theme before deployment.

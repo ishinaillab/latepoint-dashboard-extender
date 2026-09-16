@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.5 - 2026-09-17
+
+- Replace the authored SVGs with the supplied Ishi custom calendar, nail, chat and avatar outline/filled font icons.
+- Reuse the registered icon stylesheet or enqueue the verified existing uploaded stylesheet through WordPress; do not copy font assets.
+- Preserve filled-only primary selection, keyboard focus, labels, unread badge and all submenu/layout behavior.
+- Show text labels if the uploaded stylesheet is unavailable.
+
 ## 0.11.4 - 2026-09-17
 
 - Use paired original SVG icons: outline when inactive and filled when selected, driven by the existing ARIA selection state.

@@ -30,7 +30,7 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
                 const solid = getComputedStyle(n.querySelector('.ishi-dashboard-icon-solid')).display !== 'none';
                 const style = getComputedStyle(n);
                 return outline === !selected && solid === selected && style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.color === getComputedStyle(n.parentElement).color;
-            })), 'Only active primary icon is filled, without selected color/background');
+            })), 'Only active custom icon is filled, without selected color/background');
         };
         await state('appointments', 'appointments');
         await leaf('history').click(); await state('history', 'appointments');
@@ -159,6 +159,9 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
         check(await page.locator('[data-ishi-enhanced]').count() === 2, 'Two independent dashboard instances initialize');
         await page.locator('[data-ishi-primary="account"]').nth(1).click();
         check(await page.locator('.ishi-customer-dashboard').nth(0).locator('.latepoint-tab-content.active').getAttribute('data-ishi-view') === 'appointments', 'Second instance does not change first');
+        await page.goto('about:blank'); await page.setContent(fixture('--missing-icons')); await page.waitForSelector('[data-ishi-enhanced]');
+        check(await page.locator('.ishi-dashboard-icon-label:visible').count() === 4, 'Missing stylesheet shows all four accessible labels');
+        check(await page.locator('.ishi-dashboard-icon:visible').count() === 0, 'Missing stylesheet does not display broken glyphs');
         // No-JS content is still server-rendered and navigable via anchors.
         const nojs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
         const fallback = await nojs.newPage(); await fallback.setContent(fixture());

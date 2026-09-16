@@ -161,7 +161,7 @@
     white-space: nowrap;
 }
 
-/* Selection changes the SVG variant only; the same color and box are retained. */
+/* Selection changes the custom font variant only; the same color and box are retained. */
 .ishi-customer-dashboard .ishi-dashboard-icon {
     display: block;
     width: 1em;
@@ -172,3 +172,25 @@
 .ishi-customer-dashboard .ishi-dashboard-icon-solid { display: none; }
 .ishi-customer-dashboard [data-ishi-primary][aria-selected="true"] .ishi-dashboard-icon-outline { display: none; }
 .ishi-customer-dashboard [data-ishi-primary][aria-selected="true"] .ishi-dashboard-icon-solid { display: inline; }
+
+/* Reset Fontello's inline spacing only inside the dashboard icon box. */
+.ishi-customer-dashboard .ishi-dashboard-icon > i {
+    font-size: inherit;
+    font-style: normal;
+    line-height: 1;
+}
+.ishi-customer-dashboard .ishi-dashboard-icon > i::before {
+    margin: 0;
+    width: 1em;
+    line-height: 1;
+}
+.ishi-customer-dashboard.ishi-dashboard-no-icons .ishi-dashboard-icon { display: none; }
+.ishi-customer-dashboard.ishi-dashboard-no-icons .ishi-dashboard-icon-label {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    white-space: normal;
+    font-size: .8rem;
+}
+.ishi-customer-dashboard.ishi-dashboard-no-icons [aria-selected="true"] .ishi-dashboard-icon-label { font-weight: 700; }
