@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through server-side shortcode output composition.
- * Version: 0.10.28
+ * Version: 0.10.29
  * Author: Ishi
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.28');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.29');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
@@ -303,54 +303,103 @@ final class LatePoint_Dashboard_Extender {
 
 
     private static function add_addresses_tab($html) {
-        if (!is_string($html) || $html === '' || !class_exists('DOMDocument') || !function_exists('wc_get_account_endpoint_url')) {
+        if (!is_string($html) || $html === '' || !class_exists('DOMDocument')) {
+            return $html;
+        }
+
+        $use_shortcode = shortcode_exists('ishi_customer_addresses');
+        if (!$use_shortcode && !function_exists('wc_get_account_endpoint_url')) {
             return $html;
         }
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $previous = libxml_use_internal_errors(true);
-        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
+        try {
+            $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
 
-        if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-            return $html;
-        }
-
-        $xpath = new DOMXPath($dom);
-        $root = $dom->getElementById('latepoint-dashboard-extender-root');
-        $trigger_container = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-triggers ")]', $root)->item(0);
-        if (!$root || !$trigger_container || $xpath->query('.//*[@data-ishi-dashboard-tab="addresses"]', $root)->length > 0) {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-            return $html;
-        }
-
-        $history_trigger = null;
-        foreach ($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]', $trigger_container) as $trigger) {
-            if (strpos($trigger->getAttribute('data-tab-target'), 'tab-content-customer-orders') !== false) {
-                $history_trigger = $trigger;
-                break;
+            if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
+                return $html;
             }
-        }
-        if (!$history_trigger) {
+
+            $xpath = new DOMXPath($dom);
+            $root = $dom->getElementById('latepoint-dashboard-extender-root');
+            if (!$root) {
+                return $html;
+            }
+            $trigger_container = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-triggers ")]', $root)->item(0);
+            if (!$root || !$trigger_container || $xpath->query('.//*[@data-ishi-dashboard-tab="addresses"]', $root)->length > 0) {
+                return $html;
+            }
+
+            $history_trigger = null;
+            foreach ($xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]', $trigger_container) as $trigger) {
+                if (strpos($trigger->getAttribute('data-tab-target'), 'tab-content-customer-orders') !== false) {
+                    $history_trigger = $trigger;
+                    break;
+                }
+            }
+            if (!$history_trigger) {
+                return $html;
+            }
+
+            $trigger = $dom->createElement('a');
+            $trigger->setAttribute('href', '#');
+            $trigger->setAttribute('class', 'latepoint-tab-trigger');
+            $trigger->setAttribute('data-tab-target', '.tab-content-ishi-customer-addresses');
+            $trigger->setAttribute('data-ishi-dashboard-tab', 'addresses');
+            $trigger->appendChild($dom->createTextNode('Addresses'));
+            if ($history_trigger->nextSibling) $trigger_container->insertBefore($trigger, $history_trigger->nextSibling);
+            else $trigger_container->appendChild($trigger);
+
+            $content = $dom->createElement('div');
+            $content->setAttribute('class', 'latepoint-tab-content tab-content-ishi-customer-addresses');
+            $content->setAttribute('data-ishi-dashboard-tab', 'addresses');
+            // Choose one renderer before building any address UI.
+            if ($use_shortcode) {
+                $addresses_html = do_shortcode('[ishi_customer_addresses]');
+                if (!is_string($addresses_html) || !self::append_addresses_html($dom, $content, $addresses_html)) {
+                    return $html;
+                }
+            } else {
+                self::render_addresses_fallback($dom, $content);
+            }
+
+            $orders_content = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")][contains(concat(" ", normalize-space(@class), " "), " tab-content-customer-orders ")]', $root)->item(0);
+            if ($orders_content && $orders_content->parentNode) {
+                if ($orders_content->nextSibling) $orders_content->parentNode->insertBefore($content, $orders_content->nextSibling);
+                else $orders_content->parentNode->appendChild($content);
+            } else $root->appendChild($content);
+
+            $result = self::serialize_root($dom);
+            return $result;
+        } finally {
             libxml_clear_errors();
             libxml_use_internal_errors($previous);
-            return $html;
+        }
+    }
+
+    private static function append_addresses_html($dom, $content, $html) {
+        // An empty shortcode response is intentional; do not show a second UI.
+        if ($html === '') {
+            return true;
         }
 
-        $trigger = $dom->createElement('a');
-        $trigger->setAttribute('href', '#');
-        $trigger->setAttribute('class', 'latepoint-tab-trigger');
-        $trigger->setAttribute('data-tab-target', '.tab-content-ishi-customer-addresses');
-        $trigger->setAttribute('data-ishi-dashboard-tab', 'addresses');
-        $trigger->appendChild($dom->createTextNode('Addresses'));
-        if ($history_trigger->nextSibling) $trigger_container->insertBefore($trigger, $history_trigger->nextSibling);
-        else $trigger_container->appendChild($trigger);
+        $fragment_dom = new DOMDocument('1.0', 'UTF-8');
+        $wrapped = '<!DOCTYPE html><html><body><div id="ishi-addresses-shortcode-root">' . $html . '</div></body></html>';
+        if (!$fragment_dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
+            return false;
+        }
+        $fragment_root = $fragment_dom->getElementById('ishi-addresses-shortcode-root');
+        if (!$fragment_root) {
+            return false;
+        }
+        foreach (iterator_to_array($fragment_root->childNodes) as $child) {
+            $content->appendChild($dom->importNode($child, true));
+        }
+        return true;
+    }
 
-        $content = $dom->createElement('div');
-        $content->setAttribute('class', 'latepoint-tab-content tab-content-ishi-customer-addresses');
-        $content->setAttribute('data-ishi-dashboard-tab', 'addresses');
+    private static function render_addresses_fallback($dom, $content) {
         $inner = $dom->createElement('div');
         $inner->setAttribute('class', 'woocommerce');
         $account = $dom->createElement('div');
@@ -399,17 +448,6 @@ final class LatePoint_Dashboard_Extender {
         $account->appendChild($columns);
         $inner->appendChild($account);
         $content->appendChild($inner);
-
-        $orders_content = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")][contains(concat(" ", normalize-space(@class), " "), " tab-content-customer-orders ")]', $root)->item(0);
-        if ($orders_content && $orders_content->parentNode) {
-            if ($orders_content->nextSibling) $orders_content->parentNode->insertBefore($content, $orders_content->nextSibling);
-            else $orders_content->parentNode->appendChild($content);
-        } else $root->appendChild($content);
-
-        $result = self::serialize_root($dom);
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
-        return $result;
     }
 
     private static function create_order_card($dom, $order) {
