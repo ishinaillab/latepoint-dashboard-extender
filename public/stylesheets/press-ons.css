@@ -194,3 +194,13 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Server-rendered order navigation retains LatePoint's button styling. */
+.ishi-press-ons-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+}
