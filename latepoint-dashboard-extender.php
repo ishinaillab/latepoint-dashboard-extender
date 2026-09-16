@@ -20,6 +20,7 @@ final class LatePoint_Dashboard_Extender {
 
     public static function init() {
         add_filter('do_shortcode_tag', array(__CLASS__, 'filter_customer_dashboard_output'), 10, 4);
+        add_filter('do_shortcode_tag', array(__CLASS__, 'order_customer_dashboard_tabs'), 20, 4);
         add_action('latepoint_init', array(__CLASS__, 'load_latepoint_extension'), 20);
         add_action('latepoint_wp_enqueue_scripts', array(__CLASS__, 'enqueue_styles'));
     }
@@ -57,6 +58,78 @@ final class LatePoint_Dashboard_Extender {
         }
 
         return $output;
+    }
+
+    public static function order_customer_dashboard_tabs($html, $tag, $attr, $m) {
+        if ($tag !== 'latepoint_customer_dashboard' || !is_string($html) || $html === '' || !class_exists('DOMDocument')) {
+            return $html;
+        }
+
+        // Stable target selectors, independent of translated labels and badges.
+        $targets = array(
+            '.tab-content-customer-bookings',
+            '.tab-content-customer-orders',
+            '.tab-content-ishi-customer-press-ons',
+            '.tab-content-customer-info-form',
+            '.tab-content-ishi-customer-addresses',
+            '.tab-content-customer-new-appointment-form',
+            '.tab-content-customer-booking-messages',
+        );
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $previous = libxml_use_internal_errors(true);
+
+        try {
+            $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
+            if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
+                return $html;
+            }
+
+            $xpath = new DOMXPath($dom);
+            $root = $dom->getElementById('latepoint-dashboard-extender-root');
+            if (!$root) {
+                return $html;
+            }
+            $containers = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " customer-dashboard-tabs ")]', $root);
+            $changed = false;
+            foreach ($containers as $container) {
+                $nodes = array();
+                $original = array();
+                // Only direct navigation children; never touch nested tabs or panels.
+                foreach ($xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]', $container) as $trigger) {
+                    $target = $trigger->getAttribute('data-tab-target');
+                    if (!in_array($target, $targets, true)) {
+                        continue;
+                    }
+                    if (isset($nodes[$target])) {
+                        // Ambiguous markup: preserve the original output in full.
+                        return $html;
+                    }
+                    $nodes[$target] = $trigger;
+                    $original[] = $target;
+                }
+                $ordered = array_values(array_intersect($targets, $original));
+                if ($ordered === $original) {
+                    continue;
+                }
+
+                // Replace only known-tab slots, preserving unknown tabs in place.
+                $slots = array();
+                foreach ($original as $target) {
+                    $slot = $dom->createComment('ishi-tab-slot');
+                    $container->replaceChild($slot, $nodes[$target]);
+                    $slots[] = $slot;
+                }
+                foreach ($ordered as $index => $target) {
+                    $container->replaceChild($nodes[$target], $slots[$index]);
+                }
+                $changed = true;
+            }
+
+            return $changed ? self::serialize_root($dom) : $html;
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        }
     }
 
     private static function rename_orders_tab($html) {
