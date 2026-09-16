@@ -34,3 +34,5 @@ jobs:
         run: php tests/run.php --without-woocommerce
       - name: Test Press-Ons pagination
         run: php tests/pagination.php
+      - name: Test native dashboard hooks
+        run: php tests/native-hooks.php

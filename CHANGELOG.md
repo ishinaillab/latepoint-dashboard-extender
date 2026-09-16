@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.31 - 2026-09-16
+
+- Add Press-Ons and Addresses through LatePoint's native dashboard trigger/content hooks.
+- Prepare each custom tab once and reuse its panel HTML; remove legacy HTML insertion methods.
+- Preserve tab order, Messages badges, single Addresses rendering, and Press-Ons pagination selection on the shortcode path.
+- Isolate repeated/nested renders and release pending state after renderer failures.
+- Add native-hook lifecycle regression tests and update the base fixtures to execute action hooks.
+
 ## 0.10.30 - 2026-09-16
 
 - Paginate Press-Ons using WooCommerce My Account Orders' default page size and positive limit overrides.

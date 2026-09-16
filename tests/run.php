@@ -42,6 +42,21 @@ function test_apply($tag, $value, ...$args) {
     }
     return $value;
 }
+function test_action_output($tag, ...$args) {
+    $hooks = $GLOBALS['test_hooks'][$tag] ?? array();
+    ksort($hooks);
+    ob_start();
+    try {
+        foreach ($hooks as $callbacks) {
+            foreach ($callbacks as $entry) {
+                call_user_func_array($entry[0], array_slice($args, 0, $entry[1]));
+            }
+        }
+        return ob_get_contents();
+    } finally {
+        ob_end_clean();
+    }
+}
 function shortcode_exists($tag) {
     return $tag === 'ishi_customer_addresses' && $GLOBALS['address_enabled'];
 }
@@ -52,6 +67,9 @@ function do_shortcode($input) {
     $GLOBALS['shortcode_calls']++;
     if ($GLOBALS['address_output'] instanceof Throwable) {
         throw $GLOBALS['address_output'];
+    }
+    if (is_callable($GLOBALS['address_output'])) {
+        return call_user_func($GLOBALS['address_output']);
     }
     return test_apply('do_shortcode_tag', $GLOBALS['address_output'], 'ishi_customer_addresses', array(), array());
 }
@@ -79,18 +97,32 @@ function check($condition, $message) {
     }
     $checks++;
 }
-function dashboard() {
+// Pro Features adds Messages through these same hooks at priority 10.
+$GLOBALS['messages_enabled'] = true;
+add_action('latepoint_customer_dashboard_after_tabs', function ($customer) {
+    if ($GLOBALS['messages_enabled']) {
+        echo '<a href="#" data-tab-target=".tab-content-customer-booking-messages" class="latepoint-tab-trigger latepoint-trigger-messages-tab">Messages<span class="lp-new-messages-count">3</span></a>';
+    }
+}, 10, 1);
+add_action('latepoint_customer_dashboard_after_tab_contents', function ($customer) {
+    if ($GLOBALS['messages_enabled']) {
+        echo '<div class="latepoint-tab-content tab-content-customer-booking-messages">Chat</div>';
+    }
+}, 10, 1);
+function dashboard($with_hooks = true, $customer = null) {
+    $customer = $customer ?? (object) array('id' => 1);
     return '<div class="latepoint-tabs-w"><div class="latepoint-tab-triggers customer-dashboard-tabs">'
         . '<a href="#" data-tab-target=".tab-content-customer-bookings" class="latepoint-tab-trigger active">Appointments</a>'
         . '<a href="#" data-tab-target=".tab-content-customer-orders" class="latepoint-tab-trigger">Orders</a>'
         . '<a href="#" data-tab-target=".tab-content-customer-info-form" class="latepoint-tab-trigger">Profile</a>'
         . '<a href="#" data-tab-target=".tab-content-customer-new-appointment-form" class="latepoint-tab-trigger">New Appointment</a>'
-        . '<a href="#" data-tab-target=".tab-content-customer-booking-messages" class="latepoint-tab-trigger latepoint-trigger-messages-tab">Messages<span class="lp-new-messages-count">3</span></a>'
+        . ($with_hooks ? test_action_output('latepoint_customer_dashboard_after_tabs', $customer) : '')
         . '</div><div class="latepoint-tab-content tab-content-customer-bookings active">Bookings</div>'
         . '<div class="latepoint-tab-content tab-content-customer-orders">Native orders</div>'
         . '<div class="latepoint-tab-content tab-content-customer-info-form"><form><input name="customer[first_name]" value="Unchanged"></form></div>'
         . '<div class="latepoint-tab-content tab-content-customer-new-appointment-form">Book</div>'
-        . '<div class="latepoint-tab-content tab-content-customer-booking-messages">Chat</div></div>';
+        . ($with_hooks ? test_action_output('latepoint_customer_dashboard_after_tab_contents', $customer) : '')
+        . '</div>';
 }
 function render_dashboard($html) {
     return test_apply('do_shortcode_tag', $html, 'latepoint_customer_dashboard', array(), array());
@@ -185,7 +217,8 @@ check($order($output) === $output, 'Ordering is idempotent');
 $shuffled = str_replace('</div><div class="latepoint-tab-content tab-content-customer-bookings', '<a class="latepoint-tab-trigger" data-tab-target=".unknown">Extra</a></div><div class="latepoint-tab-content tab-content-customer-bookings', dashboard());
 $ordered = sequence($order($shuffled));
 check(end($ordered) === '.unknown', 'Unknown add-on tab retained in its slot');
-check(sequence($order(dashboard() . dashboard())) === array_merge(sequence(dashboard()), sequence(dashboard())), 'Independent dashboard navigation containers preserved');
+$single_sequence = sequence($order(dashboard()));
+check(sequence($order(dashboard() . dashboard())) === array_merge($single_sequence, $single_sequence), 'Independent dashboard navigation containers ordered');
 $duplicate = str_replace('>Profile</a>', '>Profile</a><a class="latepoint-tab-trigger" data-tab-target=".tab-content-customer-info-form">Duplicate</a>', dashboard());
 check($order($duplicate) === $duplicate, 'Ambiguous duplicate targets return original HTML');
 $source = file_get_contents(dirname(__DIR__) . '/latepoint-dashboard-extender.php');

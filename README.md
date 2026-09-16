@@ -1,8 +1,8 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.10.30**
+Current version: **0.10.31**
 
-Extends the output of `[latepoint_customer_dashboard]` while retaining LatePoint's native tab switching and lightboxes.
+Adds Press-Ons and Addresses through LatePoint's native dashboard hooks while retaining native tab switching and lightboxes.
 
 ## Dashboard behavior
 
@@ -10,9 +10,21 @@ Tab order: **Appointments → History → Press-Ons → Profile → Addresses �
 
 Missing optional tabs are skipped. Unknown add-on tabs retain their positions.
 
-Addresses uses `[ishi_customer_addresses]` when registered. Otherwise, it renders the existing WooCommerce billing/shipping display if WooCommerce's account endpoint API is available. The shortcode and fallback are never both rendered. An empty shortcode response stays empty; an invalid response leaves the incoming dashboard unchanged at the Addresses composition stage.
+Addresses uses `[ishi_customer_addresses]` when registered. Otherwise, it renders the existing WooCommerce billing/shipping display if WooCommerce's account endpoint API is available. The shortcode and fallback are never both rendered. An empty shortcode response stays empty; an invalid response omits both the Addresses link and panel.
 
 The Addresses shortcode belongs to a separate plugin. Its own validation, saving, and scripts remain that plugin's responsibility.
+
+## Native tab integration
+
+- `latepoint_customer_dashboard_after_tabs` prepares each custom tab once and emits its link (priority 20).
+- `latepoint_customer_dashboard_after_tab_contents` emits the matching prepared panels (priority 20).
+- Messages remains owned by Pro Features, whose callbacks run at priority 10.
+- Per-render frames pair links and panels, including repeated dashboards for the same customer. Nested rendering is isolated; recursive custom-tab rendering is suppressed and failures release the pending frame.
+- The shortcode-output filters only rename Orders to History, reorder existing links, and select Press-Ons for pagination. They no longer create custom tabs.
+
+Native hooks also add links/panels when the dashboard is rendered directly by its controller. The configured ordering, History label, and pagination selection still require the `latepoint_customer_dashboard` shortcode filter path (also used by the dashboard block). Direct controller/AJAX output has no new final-output hook in this release; test any custom direct-render integration separately.
+
+A template that omits the native hooks will not receive these custom tabs. There is deliberately no second HTML-insertion path that could duplicate them. PHP DOM is still required to build the Press-Ons cards and apply navigation transformations.
 
 ## Press-Ons pagination
 
@@ -41,11 +53,12 @@ Run with PHP CLI and the DOM extension:
 php tests/run.php
 php tests/run.php --without-woocommerce
 php tests/pagination.php
+php tests/native-hooks.php
 ```
 
-GitHub Actions runs PHP syntax checks and the Addresses/tab and pagination regression suites on pushes to `main-features`, pull requests, and manual dispatch. The workflow uses the PHP runtime supplied by `ubuntu-24.04` and prints its version.
+GitHub Actions runs PHP syntax checks and the Addresses/tab, pagination, and native-hook regression suites on pushes to `main-features`, pull requests, and manual dispatch. The workflow uses the PHP runtime supplied by `ubuntu-24.04` and prints its version.
 
-The standalone tests use small WordPress/WooCommerce doubles. They verify single Addresses rendering, fallback behavior, empty/invalid responses, Unicode and form preservation, exception cleanup, tab ordering, Messages badges, optional/unknown tabs, and release-version consistency. They do not replace a live WordPress integration test.
+The standalone tests use small WordPress/WooCommerce doubles. They verify single Addresses rendering, fallback behavior, empty/invalid responses, Unicode and form preservation, exception cleanup, tab ordering, Messages badges, optional/unknown tabs, and release-version consistency. Native-hook tests also cover matching trigger/panel output, Pro Messages coexistence, repeated and nested renders, recursion guards, and cleanup after failures. They do not replace a live WordPress integration test.
 
 ## Release checklist
 
@@ -55,6 +68,7 @@ The standalone tests use small WordPress/WooCommerce doubles. They verify single
 4. Repeat the Addresses check with its shortcode plugin disabled to confirm the fallback.
 5. Confirm behavior for logged-out visitors and customers without orders or appointments.
 6. Test Press-Ons with more than one page, mixed/excluded orders, Previous/Next, and the site's configured page size. Verify both HPOS and legacy order storage when those modes are supported by the deployment.
-7. Record the WordPress, PHP, LatePoint, Pro Features, and WooCommerce versions actually tested before tagging or deploying a release.
+7. Verify the installed dashboard template fires both native hooks. Check a page with two dashboard shortcodes and any custom direct-controller integrations.
+8. Record the WordPress, PHP, LatePoint, Pro Features, and WooCommerce versions actually tested before tagging or deploying a release.
 
 GitHub commits do not deploy this plugin to WordPress automatically.

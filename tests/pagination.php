@@ -198,4 +198,11 @@ check($x->query('//a[contains(concat(" ",normalize-space(@class)," ")," active "
 $GLOBALS['paging_orders'] = array(new WC_Order(1));
 $x = xpath_for(render_dashboard(dashboard()));
 check($x->query('//nav[@class="ishi-press-ons-pagination"]')->length === 0, 'Single page has no pagination controls');
+$GLOBALS['paging_queries'] = array();
+$native_html = dashboard();
+check(count($GLOBALS['paging_queries']) === 1, 'Native trigger/content pair queries orders once');
+$once_filtered = render_dashboard($native_html);
+render_dashboard($once_filtered);
+check(count($GLOBALS['paging_queries']) === 1, 'Shortcode post-processing never repeats the order query');
+check(xpath_for($once_filtered)->query('//article[@data-order-id]')->length === 1, 'Prepared order cards are emitted once by native content hook');
 echo 'PASS: ' . ($checks - $start_checks) . " pagination checks\n";
