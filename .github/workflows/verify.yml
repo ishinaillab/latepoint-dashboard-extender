@@ -1,0 +1,34 @@
+name: Verify plugin
+
+on:
+  push:
+    branches: [main-features]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check PHP runtime
+        run: |
+          php --version
+          php -r 'exit(extension_loaded("dom") ? 0 : 1);'
+      - name: Lint PHP files
+        run: find . -path './.git' -prune -o -name '*.php' -print0 | xargs -0 -r -n 1 php -l
+      - name: Test with WooCommerce doubles
+        run: php tests/run.php
+      - name: Test without WooCommerce
+        run: php tests/run.php --without-woocommerce
