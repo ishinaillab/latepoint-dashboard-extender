@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.4 - 2026-09-17
+
+- Use paired original SVG icons: outline when inactive and filled when selected, driven by the existing ARIA selection state.
+- Remove selected primary-tab background/text recoloring; preserve secondary-tab styling and keyboard focus indicators.
+- Remove the dashboard icon-font enqueue dependency; inline SVGs remain available without Elementor or external font requests.
+- Preserve navigation order, one-row booking submenu, spacing, unread badge and existing feature handlers.
+
 ## 0.11.3 - 2026-09-17
 
 - Keep Appointments, History and New Appointment on one submenu row; allow local horizontal scrolling on narrow screens instead of wrapping New Appointment below.

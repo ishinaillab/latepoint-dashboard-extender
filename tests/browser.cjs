@@ -24,6 +24,13 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
             check(await page.locator('.latepoint-tab-content.active').getAttribute('data-ishi-view') === view, 'Expected active view: ' + view);
             check(await primary(group).getAttribute('aria-selected') === 'true', 'Primary follows active view: ' + group);
             check(await page.locator('section[data-ishi-section]:visible').count() === 1, 'One visible section');
+            check(await page.locator('[data-ishi-primary]').evaluateAll(controls => controls.every(n => {
+                const selected = n.getAttribute('aria-selected') === 'true';
+                const outline = getComputedStyle(n.querySelector('.ishi-dashboard-icon-outline')).display !== 'none';
+                const solid = getComputedStyle(n.querySelector('.ishi-dashboard-icon-solid')).display !== 'none';
+                const style = getComputedStyle(n);
+                return outline === !selected && solid === selected && style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.color === getComputedStyle(n.parentElement).color;
+            })), 'Only active primary icon is filled, without selected color/background');
         };
         await state('appointments', 'appointments');
         await leaf('history').click(); await state('history', 'appointments');

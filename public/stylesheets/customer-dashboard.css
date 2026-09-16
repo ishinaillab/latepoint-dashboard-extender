@@ -46,8 +46,8 @@
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control::after { content: none; }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control[aria-selected="true"] {
-    color: var(--ishi-dashboard-accent);
-    background: var(--ishi-dashboard-soft);
+    color: inherit;
+    background: transparent;
 }
 .ishi-customer-dashboard .ishi-dashboard-icon-label {
     position: absolute;
@@ -58,15 +58,6 @@
     clip-path: inset(50%);
     white-space: nowrap;
 }
-.ishi-customer-dashboard.ishi-dashboard-no-icons .ishi-dashboard-icon-label {
-    position: static;
-    width: auto;
-    height: auto;
-    clip-path: none;
-    white-space: normal;
-    font-size: .8rem;
-}
-.ishi-customer-dashboard.ishi-dashboard-no-icons .nails_skin_elementor_icons { display: none; }
 .ishi-customer-dashboard .ishi-dashboard-primary-control .lp-new-messages-count {
     position: absolute;
     top: .2rem;
@@ -169,3 +160,15 @@
     flex: 0 0 auto;
     white-space: nowrap;
 }
+
+/* Selection changes the SVG variant only; the same color and box are retained. */
+.ishi-customer-dashboard .ishi-dashboard-icon {
+    display: block;
+    width: 1em;
+    height: 1em;
+    flex: 0 0 auto;
+    overflow: visible;
+}
+.ishi-customer-dashboard .ishi-dashboard-icon-solid { display: none; }
+.ishi-customer-dashboard [data-ishi-primary][aria-selected="true"] .ishi-dashboard-icon-outline { display: none; }
+.ishi-customer-dashboard [data-ishi-primary][aria-selected="true"] .ishi-dashboard-icon-solid { display: inline; }

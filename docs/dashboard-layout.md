@@ -31,9 +31,9 @@ Booking remains the original panel with its native booking button/shortcode conf
 
 Ishi Profile 1.4.0 supplies `[ishi_latepoint_profile]`; Ishi Addresses supplies `[ishi_customer_addresses]`. The inspected component scripts use delegated events and replace their own component contents after REST responses. The navigation wraps the existing components without entering those replaceable roots. Profile rendering is raw-shortcode substitution after navigation serialization, so no form fields/nonces are rebuilt.
 
-Required assets remain LatePoint frontend CSS/JS, Pro Messages assets, Ishi UI/profile/addresses assets, and existing Press-Ons styling/lightbox support. The two layout assets depend on `latepoint-main-front`; the icon CSS is reused via WordPress enqueue. The verified icon path is relative to `wp_upload_dir()`, not a page URL. Elementor is not a runtime dependency. Site migrations that relocate/remove the custom font should update its normal registration; missing assets fall back to text controls.
+Required assets remain LatePoint frontend CSS/JS, Pro Messages assets, Ishi UI/profile/addresses assets, and existing Press-Ons styling/lightbox support. The two layout assets depend on `latepoint-main-front`. Since 0.11.4, primary icons are original inline SVG pairs rendered by the layout adapter, with no external icon-font assets. The inspected Nails stylesheet exposes single nail/avatar glyphs, not matching outline/filled pairs. Each SVG has outline and solid paths; CSS chooses the visible path from the existing primary `aria-selected` value. There is no additional state or handler. SVGs are decorative; the controls keep their accessible labels and Messages retains its unread badge.
 
-Content sections use 20px horizontal padding at all viewport widths and retain the 40px submenu/content gap. Selected navigation uses background and text color; it has no active border/underline. Pointer focus has no outline, while keyboard `:focus-visible` retains its accessible indicator.
+Content sections use 20px horizontal padding at all viewport widths and retain the 40px submenu/content gap. Primary navigation indicates selection only with a filled icon, without background or text/icon recoloring. Secondary navigation retains its existing selected colors. Navigation has no active border/underline. Pointer focus has no outline, while keyboard `:focus-visible` retains its accessible indicator.
 
 ## State and initialization
 
@@ -62,7 +62,7 @@ Automated PHP tests cover render-once components, Unicode/nonces/forms, optional
 | Billing/shipping | Single component; component replacement and save-event simulation | Actual edit/save, validation and notices |
 | New Appointment/return | Panel activation; persistent submenu and unchanged scroll position | Native booking flow, modal, completion and cancellation |
 | Logged-out | Non-dashboard HTML unchanged | Login, logout, session expiry and access boundaries |
-| Responsive layout | 320, 390, 768, 1280px; overflow and touch targets | Real component content, installed theme and icon font |
+| Responsive layout | 320, 390, 768, 1280px; overflow and touch targets | Real component content, installed theme and paired SVG appearance |
 | Keyboard | Arrow/Home/End/Enter/Space, focus and unique ARIA targets | Screen-reader announcements and native dialogs/forms |
 | Reload/direct render | Page-two selection; repeated adapter is idempotent | Custom render adapter, native initialization and pagination back/forward |
 | AJAX | Component replacement and repeat initialization | Real REST/AJAX errors and complete-fragment host integration |

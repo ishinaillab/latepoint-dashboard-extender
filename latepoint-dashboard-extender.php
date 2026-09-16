@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through native tab hooks and server-side navigation customization.
- * Version: 0.11.3
+ * Version: 0.11.4
  * Text Domain: latepoint-dashboard-extender
  * Author: Ishi
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.11.3');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.11.4');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 require_once LATEPOINT_DASHBOARD_EXTENDER_PATH . 'lib/dashboard-layout.php';
@@ -20,7 +20,6 @@ final class LatePoint_Dashboard_Extender {
 
     private static $rendering_custom_tabs = false;
     private static $dashboard_tab_frames = array();
-    private static $icons_available = false;
 
     public static function init() {
         add_filter('do_shortcode_tag', array(__CLASS__, 'filter_customer_dashboard_output'), 20, 4);
@@ -45,19 +44,6 @@ final class LatePoint_Dashboard_Extender {
             array(),
             LATEPOINT_DASHBOARD_EXTENDER_VERSION
         );
-        // This is the existing uploaded font, not an Elementor runtime dependency.
-        $icon_handle = 'elementor-icons-nails_skin_elementor_icons';
-        if (wp_style_is($icon_handle, 'registered')) {
-            wp_enqueue_style($icon_handle);
-            self::$icons_available = true;
-        } else {
-            $uploads = wp_upload_dir();
-            $relative = '/elementor/custom-icons/nails_skin_elementor_icons/css/nails_skin_elementor_icons.css';
-            if (empty($uploads['error']) && is_readable($uploads['basedir'] . $relative)) {
-                wp_enqueue_style($icon_handle, $uploads['baseurl'] . $relative, array(), (string) filemtime($uploads['basedir'] . $relative));
-                self::$icons_available = true;
-            }
-        }
         wp_enqueue_style('ishi-customer-dashboard', LATEPOINT_DASHBOARD_EXTENDER_URL . 'public/stylesheets/customer-dashboard.css', array('latepoint-main-front', 'latepoint-dashboard-extender'), LATEPOINT_DASHBOARD_EXTENDER_VERSION);
         wp_enqueue_script('ishi-customer-dashboard', LATEPOINT_DASHBOARD_EXTENDER_URL . 'public/javascripts/customer-dashboard.js', array('latepoint-main-front'), LATEPOINT_DASHBOARD_EXTENDER_VERSION, true);
     }
@@ -68,7 +54,7 @@ final class LatePoint_Dashboard_Extender {
 
     /** Explicit adapter for custom renderers. Pass native dashboard HTML before JSON encoding. */
     public static function transform_customer_dashboard_html($html) {
-        return Ishi_Customer_Dashboard_Layout::transform($html, self::requested_press_ons_page(true) > 0 ? 'custom-press-ons' : (self::requested_press_ons_page() > 0 ? 'press-ons' : false), self::$icons_available);
+        return Ishi_Customer_Dashboard_Layout::transform($html, self::requested_press_ons_page(true) > 0 ? 'custom-press-ons' : (self::requested_press_ons_page() > 0 ? 'press-ons' : false));
     }
 
     /** Backward-compatible adapter name; the layout is now hierarchical. */

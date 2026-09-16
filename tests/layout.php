@@ -28,9 +28,10 @@ check($x->query('//section[@data-ishi-section="appointments"]//button[@data-ishi
 check($x->query('//section[@data-ishi-section="appointments"]//div[@data-ishi-view="book"]')->item(0)->textContent === 'Book', 'Booking panel retained');
 check($x->query('//button[@data-ishi-primary="messages" and contains(@class,"latepoint-trigger-messages-tab")]')->length === 1, 'Primary Messages retains Pro click hook');
 check($x->query('//button[@data-ishi-primary="messages"]//span[@class="lp-new-messages-count"]')->item(0)->textContent === '3', 'Unread badge retained');
-foreach (array('calendar', 'nail', 'comment-light', 'avatar') as $icon) {
-    check($x->query('//i[@aria-hidden="true" and contains(@class,"nails_skin_elementor_icons-' . $icon . '")]')->length === 1, 'Existing icon font class used');
-}
+check($x->query('//*[local-name()="svg" and @class="ishi-dashboard-icon" and @aria-hidden="true" and @focusable="false"]')->length === 4, 'Four decorative SVG icons');
+check($x->query('//*[local-name()="path" and @class="ishi-dashboard-icon-outline"]')->length === 4, 'Each icon has an outline variant');
+check($x->query('//*[local-name()="path" and @class="ishi-dashboard-icon-solid"]')->length === 4, 'Each icon has a filled variant');
+check(strpos($output, 'nails_skin_elementor_icons') === false, 'Dashboard SVGs do not rely on the theme icon font');
 check($x->query('//*[contains(concat(" ",normalize-space(@class)," ")," latepoint-tab-triggers ")]')->length === 0, 'Redesigned navigation does not bind competing flat LatePoint handler');
 check(render_dashboard($output) === $output && $GLOBALS['profile_calls'] === 1, 'Idempotent output and Profile rendering');
 check(LatePoint_Dashboard_Extender::transform_customer_dashboard_html($output) === $output, 'Explicit adapter is idempotent');
