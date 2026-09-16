@@ -157,3 +157,15 @@
     margin-block-start: 0;
 }
 .latepoint-w .ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-section[hidden] { display: none; }
+
+/* Keep the booking submenu immediately after History, including narrow screens. */
+.ishi-customer-dashboard .ishi-dashboard-secondary[data-ishi-secondary="appointments"] {
+    flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+}
+.ishi-customer-dashboard .ishi-dashboard-secondary[data-ishi-secondary="appointments"] > button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}

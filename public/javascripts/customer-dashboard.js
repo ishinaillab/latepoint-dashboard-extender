@@ -112,6 +112,13 @@
         const target = tabs[(index + tabs.length) % tabs.length];
         tabs.forEach(node => set(node, 'tabindex', node === target ? 0 : -1));
         target.focus({ preventScroll: true });
+        // Reveal keyboard focus inside a scrolling submenu without scrolling the page.
+        if (list.scrollWidth > list.clientWidth) {
+            const item = target.getBoundingClientRect();
+            const bounds = list.getBoundingClientRect();
+            if (item.left < bounds.left) list.scrollLeft += item.left - bounds.left;
+            else if (item.right > bounds.right) list.scrollLeft += item.right - bounds.right;
+        }
     });
 
     // Observe new markup only; ordinary form replacements do not rebuild navigation.

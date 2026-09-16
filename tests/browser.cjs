@@ -93,6 +93,21 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
                 check(await page.locator('section[data-ishi-section="' + group + '"]').evaluate(n => {const s = getComputedStyle(n); return s.paddingLeft === '20px' && s.paddingRight === '20px';}), 'Section padding: ' + width + '/' + group);
                 check(await primary(group).evaluate(n => { const s = getComputedStyle(n); return s.outlineStyle === 'none' && s.borderBottomColor === 'rgba(0, 0, 0, 0)'; }), 'Pointer-selected primary has no outline/underline');
             }
+            await primary('appointments').click();
+            const row = page.locator('[data-ishi-secondary="appointments"]');
+            check(await row.locator('button').evaluateAll(nodes => {
+                const boxes = nodes.map(n => n.getBoundingClientRect());
+                return nodes.map(n => n.dataset.ishiView).join(',') === 'appointments,history,book'
+                    && boxes.every(b => Math.abs(b.top - boxes[0].top) < 1)
+                    && boxes[2].left >= boxes[1].right;
+            }), 'New Appointment stays after History on the same row at ' + width);
+            await leaf('appointments').focus();
+            const beforeRowKey = await page.evaluate(() => scrollY);
+            await page.keyboard.press('End');
+            check(await leaf('book').evaluate(n => { const r = n.getBoundingClientRect(); const p = n.parentElement.getBoundingClientRect(); return n === document.activeElement && r.left >= p.left - 1 && r.right <= p.right + 1; }), 'Keyboard reveals booking within submenu at ' + width);
+            check(await page.evaluate(() => scrollY) === beforeRowKey, 'Submenu keyboard scrolling does not move page');
+            await page.keyboard.press('Enter'); await state('book', 'appointments');
+            check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Booking submenu scroll stays inside dashboard at ' + width);
             const boxes = await page.locator('[data-ishi-primary]').evaluateAll(nodes => nodes.map(node => ({ w: node.getBoundingClientRect().width, h: node.getBoundingClientRect().height })));
             check(boxes.every(box => box.w >= 44 && box.h >= 44), 'Primary touch targets at ' + width);
         }

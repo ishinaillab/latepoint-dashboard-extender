@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.3 - 2026-09-17
+
+- Keep Appointments, History and New Appointment on one submenu row; allow local horizontal scrolling on narrow screens instead of wrapping New Appointment below.
+- Preserve existing typography, colors, borders, section padding and content spacing.
+
 ## 0.11.2 - 2026-09-17
 
 - Remove selected-menu borders/underlines and pointer-focus outlines while retaining keyboard focus indicators.

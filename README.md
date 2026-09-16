@@ -1,6 +1,6 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.11.2**
+Current version: **0.11.3**
 
 Organizes LatePoint's Customer Dashboard with server-rendered primary and secondary navigation while retaining its existing feature components.
 
@@ -31,7 +31,7 @@ The caller must already have rendered authorized dashboard HTML and arranged the
 
 The retained active content panel is the selection authority. Primary selection, secondary selection, visibility and ARIA derive from it. The redesigned navigation omits LatePoint's flat `latepoint-tab-triggers` delegation class, whose descendant-wide clearing conflicts with nested navigation. Native feature trigger classes, data attributes and bubbling events remain available, including Pro Messages. There is no additional URL/hash router or per-section state store. Press-Ons pagination retains its existing query parameter behavior.
 
-Navigation uses non-submitting buttons without hash destinations, preventing browser/theme anchor scrolling. Arrow keys and Home/End move focus without scrolling; Enter/Space activate. New Appointment is the third Appointments submenu, after History; its sibling submenus remain available to return. Before JavaScript enhancement, all owned views remain server-rendered and visible. This does not make JavaScript-dependent native forms or messaging work without their required scripts.
+Navigation uses non-submitting buttons without hash destinations, preventing browser/theme anchor scrolling. Arrow keys and Home/End move focus without scrolling; Enter/Space activate. New Appointment is the third Appointments submenu, after History; this submenu stays on one row and scrolls horizontally on narrow screens instead of wrapping; its sibling submenus remain available to return. Before JavaScript enhancement, all owned views remain server-rendered and visible. This does not make JavaScript-dependent native forms or messaging work without their required scripts.
 
 Layout assets use WordPress enqueue dependencies on LatePoint's frontend handle. The existing `elementor-icons-nails_skin_elementor_icons` stylesheet is reused when registered, otherwise its verified path under the site's uploads directory is enqueued if readable. Font files are not copied. If unavailable, controls display text labels. No Elementor runtime or fixed dashboard page URL is required.
 
