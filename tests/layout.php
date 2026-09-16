@@ -57,4 +57,10 @@ foreach ($x->query('//div[@data-ishi-secondary="appointments"]/button') as $tab)
 check($booking_tabs === array('appointments', 'history', 'book'), 'New Appointment follows History in the same submenu');
 check($x->query('//button[@data-ishi-view and @href]')->length === 0, 'Tab controls have no hash destinations');
 check($x->query('//button[@data-ishi-view and @type="button"]')->length === 8, 'Every view trigger is non-submitting');
+$native_header = '<div class="latepoint-w"><a href="/wp-admin/admin-post.php?action=latepoint_route_call&amp;route_name=customer_cabinet__logout">Sign out</a><h4>Bienvenue Customer</h4>';
+$header_output = render_dashboard($native_header . dashboard() . '</div>');
+check(strpos($header_output, 'customer_cabinet__logout') === false && strpos($header_output, 'Bienvenue') === false, 'Verified native header removed independent of translation');
+$other_header = '<div class="latepoint-w"><a href="/help">Help</a><h4>Other heading</h4>';
+check(strpos(render_dashboard($other_header . dashboard() . '</div>'), 'Other heading') !== false, 'Unrelated nearby header preserved');
+check(render_dashboard($native_header . $unknown . '</div>') === $native_header . $unknown . '</div>', 'Native fallback preserves its header');
 echo 'PASS: ' . ($checks - $start) . " layout checks\n";

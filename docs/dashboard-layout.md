@@ -6,7 +6,7 @@ The inspected LatePoint 5.6.10 source follows `OsShortcodesHelper::shortcode_lat
 
 The dashboard view emits native triggers and panels plus `latepoint_customer_dashboard_after_tabs` and `latepoint_customer_dashboard_after_tab_contents`. Ishi custom tabs remain on these hooks at priority 20; Pro Messages uses priority 10. Matched per-render frames avoid duplicate Addresses/Press-Ons rendering.
 
-The adapter parses only completed dashboard HTML, preflights known direct trigger/panel pairs, then groups the retained nodes on the server. It never captures whole-page output, modifies core templates or reconstructs panels in the browser. An unknown target, duplicate target or missing matched panel returns the original HTML. Already adapted output is unchanged.
+The adapter parses only completed dashboard HTML, preflights known direct trigger/panel pairs, then groups the retained nodes on the server. It never captures whole-page output, modifies core templates or reconstructs panels in the browser. An unknown target, duplicate target or missing matched panel returns the original HTML. Already adapted output is unchanged. On a verified dashboard, the adapter removes the immediately preceding native h4 Welcome heading and logout anchor only when their parent is `latepoint-w` and the anchor has the inspected `latepoint_route_call` action and `customer_cabinet__logout` route. This avoids matching translated text or removing unrelated headings/links. Native fallback and logged-out output are unchanged.
 
 ## Upstream contracts
 
@@ -32,6 +32,8 @@ Booking remains the original panel with its native booking button/shortcode conf
 Ishi Profile 1.4.0 supplies `[ishi_latepoint_profile]`; Ishi Addresses supplies `[ishi_customer_addresses]`. The inspected component scripts use delegated events and replace their own component contents after REST responses. The navigation wraps the existing components without entering those replaceable roots. Profile rendering is raw-shortcode substitution after navigation serialization, so no form fields/nonces are rebuilt.
 
 Required assets remain LatePoint frontend CSS/JS, Pro Messages assets, Ishi UI/profile/addresses assets, and existing Press-Ons styling/lightbox support. The two layout assets depend on `latepoint-main-front`; the icon CSS is reused via WordPress enqueue. The verified icon path is relative to `wp_upload_dir()`, not a page URL. Elementor is not a runtime dependency. Site migrations that relocate/remove the custom font should update its normal registration; missing assets fall back to text controls.
+
+Content sections use 20px horizontal padding at all viewport widths and retain the 40px submenu/content gap. Selected navigation uses background and text color; it has no active border/underline. Pointer focus has no outline, while keyboard `:focus-visible` retains its accessible indicator.
 
 ## State and initialization
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.2 - 2026-09-17
+
+- Remove selected-menu borders/underlines and pointer-focus outlines while retaining keyboard focus indicators.
+- Remove the verified native Welcome heading and logout link from adapted dashboard output.
+- Apply 20px left/right section padding at every viewport without changing the 40px content gap.
+
 ## 0.11.1 - 2026-09-17
 
 - Use non-submitting tab buttons without hash targets or navigation focus scrolling.

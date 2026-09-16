@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through native tab hooks and server-side navigation customization.
- * Version: 0.11.1
+ * Version: 0.11.2
  * Text Domain: latepoint-dashboard-extender
  * Author: Ishi
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.11.1');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.11.2');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 require_once LATEPOINT_DASHBOARD_EXTENDER_PATH . 'lib/dashboard-layout.php';

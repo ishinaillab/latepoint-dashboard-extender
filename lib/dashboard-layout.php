@@ -59,6 +59,23 @@ final class Ishi_Customer_Dashboard_Layout {
             $raw = array();
             foreach ($plans as $plan) {
                 list($wrapper, $old_nav, $views) = $plan;
+                // Remove only the inspected native header pair, identified by structure
+                // and route rather than translated Welcome/Logout text.
+                $outer = $wrapper->parentNode;
+                $heading = $xpath->query('preceding-sibling::*[1]', $wrapper)->item(0);
+                $logout = $heading ? $xpath->query('preceding-sibling::*[1]', $heading)->item(0) : null;
+                if ($outer instanceof DOMElement && self::has_class($outer, 'latepoint-w')
+                    && $heading instanceof DOMElement && $heading->tagName === 'h4'
+                    && $logout instanceof DOMElement && $logout->tagName === 'a') {
+                    $query = parse_url($logout->getAttribute('href'), PHP_URL_QUERY);
+                    $params = array();
+                    if (is_string($query)) { parse_str($query, $params); }
+                    if (($params['action'] ?? '') === 'latepoint_route_call'
+                        && ($params['route_name'] ?? '') === 'customer_cabinet__logout') {
+                        $outer->removeChild($logout);
+                        $outer->removeChild($heading);
+                    }
+                }
                 $prefix = wp_unique_id('ishi-dashboard-');
                 $wrapper->setAttribute('class', $wrapper->getAttribute('class') . ' ishi-customer-dashboard' . ($icons_available ? '' : ' ishi-dashboard-no-icons'));
                 $wrapper->setAttribute('data-ishi-layout', '1');

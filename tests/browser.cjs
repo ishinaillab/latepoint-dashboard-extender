@@ -27,6 +27,7 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
         };
         await state('appointments', 'appointments');
         await leaf('history').click(); await state('history', 'appointments');
+        check(await leaf('history').evaluate(n => {const s = getComputedStyle(n); return s.outlineStyle === 'none' && s.borderColor === 'rgba(0, 0, 0, 0)';}), 'Selected secondary has no border/outline');
         await leaf('appointments').click(); await state('appointments', 'appointments');
         await primary('press-ons').click(); await state('press-ons', 'press-ons');
         check(await page.locator('article[data-order-id]:visible').count() === 10, 'Ten cards retained');
@@ -89,6 +90,8 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
             for (const group of ['appointments', 'press-ons', 'messages', 'account']) {
                 await primary(group).click();
                 check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No horizontal page overflow: ' + width + '/' + group);
+                check(await page.locator('section[data-ishi-section="' + group + '"]').evaluate(n => {const s = getComputedStyle(n); return s.paddingLeft === '20px' && s.paddingRight === '20px';}), 'Section padding: ' + width + '/' + group);
+                check(await primary(group).evaluate(n => { const s = getComputedStyle(n); return s.outlineStyle === 'none' && s.borderBottomColor === 'rgba(0, 0, 0, 0)'; }), 'Pointer-selected primary has no outline/underline');
             }
             const boxes = await page.locator('[data-ishi-primary]').evaluateAll(nodes => nodes.map(node => ({ w: node.getBoundingClientRect().width, h: node.getBoundingClientRect().height })));
             check(boxes.every(box => box.w >= 44 && box.h >= 44), 'Primary touch targets at ' + width);

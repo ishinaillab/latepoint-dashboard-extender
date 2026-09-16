@@ -47,7 +47,6 @@
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control::after { content: none; }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control[aria-selected="true"] {
     color: var(--ishi-dashboard-accent);
-    border-bottom-color: currentColor;
     background: var(--ishi-dashboard-soft);
 }
 .ishi-customer-dashboard .ishi-dashboard-icon-label {
@@ -116,8 +115,9 @@
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button[aria-selected="true"] {
     background: var(--ishi-dashboard-soft);
     color: var(--ishi-dashboard-accent);
-    border-color: var(--ishi-dashboard-accent);
 }
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:focus:not(:focus-visible),
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button:focus:not(:focus-visible) { outline: none; }
 .latepoint-w .ishi-customer-dashboard button:focus-visible,
 .latepoint-w .ishi-customer-dashboard [role="tabpanel"]:focus-visible {
     outline: 3px solid var(--ishi-dashboard-accent);
@@ -132,7 +132,6 @@
 .ishi-customer-dashboard:not([data-ishi-enhanced]) .ishi-dashboard-section { margin-bottom: 2rem; }
 @media (min-width: 768px) {
     .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control { min-height: 64px; font-size: 1.65rem; }
-    .ishi-customer-dashboard .ishi-dashboard-section { padding-inline: .25rem; }
 }
 @media (prefers-reduced-motion: reduce) {
     .ishi-customer-dashboard { scroll-behavior: auto; }
@@ -143,6 +142,8 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     row-gap: 40px;
+    box-sizing: border-box;
+    padding-inline: 20px;
     align-content: start;
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-section > .latepoint-tab-content {

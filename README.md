@@ -1,6 +1,6 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.11.1**
+Current version: **0.11.2**
 
 Organizes LatePoint's Customer Dashboard with server-rendered primary and secondary navigation while retaining its existing feature components.
 
@@ -35,7 +35,7 @@ Navigation uses non-submitting buttons without hash destinations, preventing bro
 
 Layout assets use WordPress enqueue dependencies on LatePoint's frontend handle. The existing `elementor-icons-nails_skin_elementor_icons` stylesheet is reused when registered, otherwise its verified path under the site's uploads directory is enqueued if readable. Font files are not copied. If unavailable, controls display text labels. No Elementor runtime or fixed dashboard page URL is required.
 
-Submenus use `.8rem` font size, `1.2` line height, `700` font weight and a `40px` minimum height. A single grid gap provides 40px between the submenu row and its content, with native outer top spacing normalized.
+Submenus use `.8rem` font size, `1.2` line height, `700` font weight and a `40px` minimum height. Selected menus use color/background without an outline or underline; keyboard focus remains visible. Each content section has 20px horizontal padding. The native Welcome/logout header pair is removed from adapted output using its verified structure and logout route, without changing authentication or other logout interfaces. A single grid gap provides 40px between the submenu row and its content, with native outer top spacing normalized.
 
 ## Press-Ons pagination
 
@@ -89,4 +89,4 @@ To run the browser suite locally, install Playwright 1.62.1 in a separate test d
 4. Verify optional-provider fallback, native hooks, multiple instances and any custom direct-render/AJAX integration.
 5. Record the WordPress, PHP, LatePoint, Pro, Ishi and WooCommerce versions actually tested before tagging or deploying.
 
-GitHub commits do not deploy this plugin to WordPress automatically. Version 0.11.0 was tested and accepted by the site owner. Version 0.11.1 adds the requested styling/navigation refinements and category submenu; verify these changes with real site content before deployment.
+GitHub commits do not deploy this plugin to WordPress automatically. Versions 0.11.0 and 0.11.1 were tested and accepted by the site owner. Version 0.11.2 refines selected-menu styling, removes the native dashboard header and adds section padding; verify these changes with the installed theme before deployment.
