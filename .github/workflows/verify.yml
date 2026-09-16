@@ -36,3 +36,7 @@ jobs:
         run: php tests/pagination.php
       - name: Test native dashboard hooks
         run: php tests/native-hooks.php
+      - name: Test shared order policy and lightbox
+        run: php tests/order-policy.php
+      - name: Test lightbox without WooCommerce
+        run: php tests/order-policy.php --without-woocommerce

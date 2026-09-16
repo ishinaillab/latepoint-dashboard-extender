@@ -86,7 +86,17 @@ if (!$without_wc) {
     }
 }
 // Loading the controller catches accidental reintroduction of its old filter.
-class OsController {}
+class OsController {
+    public $params = array();
+    public $vars = array();
+    public $action_access = array('customer' => array());
+    public $views_folder;
+    public $response;
+    public $rendered;
+    public function __construct() {}
+    public function send_json($response) { $this->response = $response; }
+    public function format_render($view) { $this->rendered = $view; }
+}
 require dirname(__DIR__) . '/latepoint-dashboard-extender.php';
 LatePoint_Dashboard_Extender::load_latepoint_extension();
 $checks = 0;
@@ -221,6 +231,10 @@ $single_sequence = sequence($order(dashboard()));
 check(sequence($order(dashboard() . dashboard())) === array_merge($single_sequence, $single_sequence), 'Independent dashboard navigation containers ordered');
 $duplicate = str_replace('>Profile</a>', '>Profile</a><a class="latepoint-tab-trigger" data-tab-target=".tab-content-customer-info-form">Duplicate</a>', dashboard());
 check($order($duplicate) === $duplicate, 'Ambiguous duplicate targets return original HTML');
+$double = render_dashboard(dashboard() . dashboard());
+check(substr_count($double, '>History</a>') === 2, 'History label applied independently to both dashboards');
+$badged = str_replace('>Orders</a>', '><span>Orders</span><span class="count">2</span></a>', dashboard());
+check(strpos(render_dashboard($badged), '<span>History</span><span class="count">2</span>') !== false, 'History rename preserves nested badge markup');
 $source = file_get_contents(dirname(__DIR__) . '/latepoint-dashboard-extender.php');
 preg_match('/^\s*\*\s*Version:\s*(\S+)/m', $source, $version);
 check(($version[1] ?? '') === LATEPOINT_DASHBOARD_EXTENDER_VERSION, 'Plugin header and runtime version agree');

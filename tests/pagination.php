@@ -69,6 +69,7 @@ if (!function_exists('wc_get_orders')) {
         public function get_id() { return $this->id; }
         public function get_customer_id() { return $this->customer; }
         public function get_items($type = 'line_item') { return $type === 'line_item' ? $this->items : array(); }
+        public function get_type() { return 'shop_order'; }
         public function get_status() { return 'completed'; }
         public function get_order_number() { return (string) $this->id; }
         public function get_date_created() { return false; }

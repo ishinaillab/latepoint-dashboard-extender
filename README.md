@@ -1,6 +1,6 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.10.31**
+Current version: **0.10.32**
 
 Adds Press-Ons and Addresses through LatePoint's native dashboard hooks while retaining native tab switching and lightboxes.
 
@@ -20,7 +20,7 @@ The Addresses shortcode belongs to a separate plugin. Its own validation, saving
 - `latepoint_customer_dashboard_after_tab_contents` emits the matching prepared panels (priority 20).
 - Messages remains owned by Pro Features, whose callbacks run at priority 10.
 - Per-render frames pair links and panels, including repeated dashboards for the same customer. Nested rendering is isolated; recursive custom-tab rendering is suppressed and failures release the pending frame.
-- The shortcode-output filters only rename Orders to History, reorder existing links, and select Press-Ons for pagination. They no longer create custom tabs.
+- One shortcode-output filter uses a single DOM pass to rename Orders to History, reorder existing links, and select Press-Ons for pagination. They no longer create custom tabs.
 
 Native hooks also add links/panels when the dashboard is rendered directly by its controller. The configured ordering, History label, and pagination selection still require the `latepoint_customer_dashboard` shortcode filter path (also used by the dashboard block). Direct controller/AJAX output has no new final-output hook in this release; test any custom direct-render integration separately.
 
@@ -35,6 +35,8 @@ Previous/Next links use `ishi_press_ons_page` on the existing dashboard URL, pre
 Eligibility is checked before pages are filled: pure LatePoint-category orders are excluded, while mixed orders, missing products, and empty orders retain their existing treatment. Queries use WooCommerce's order API in batches of 50, with date/ID sorting. Only the current page is retained, and scanning stops once another eligible order establishes that Next is available. There is no unfiltered total/page count.
 
 This avoids loading every order at once, but deep pages or histories dominated by excluded orders can still require scanning many batches. No database-specific SQL, persistent classification metadata, or cache is introduced.
+
+Both the dashboard list and lightbox use the same ownership, viewable order type/status, and category eligibility check. The lightbox re-checks these rules on every request and returns an error when WooCommerce's order API is unavailable.
 
 ## Dependencies
 
@@ -54,6 +56,8 @@ php tests/run.php
 php tests/run.php --without-woocommerce
 php tests/pagination.php
 php tests/native-hooks.php
+php tests/order-policy.php
+php tests/order-policy.php --without-woocommerce
 ```
 
 GitHub Actions runs PHP syntax checks and the Addresses/tab, pagination, and native-hook regression suites on pushes to `main-features`, pull requests, and manual dispatch. The workflow uses the PHP runtime supplied by `ubuntu-24.04` and prints its version.

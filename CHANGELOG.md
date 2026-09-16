@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.32 - 2026-09-16
+
+- Share ownership, type/status visibility, and category eligibility between Press-Ons lists and lightboxes.
+- Return a controlled lightbox error when WooCommerce is unavailable; stop immediately after rejected requests.
+- Combine History naming, tab ordering, and pagination selection into one DOM pass, including History labels on repeated dashboards.
+- Add list/lightbox policy parity and missing-WooCommerce endpoint regression tests.
+
 ## 0.10.31 - 2026-09-16
 
 - Add Press-Ons and Addresses through LatePoint's native dashboard trigger/content hooks.

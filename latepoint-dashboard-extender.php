@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through native tab hooks and server-side navigation customization.
- * Version: 0.10.31
+ * Version: 0.10.32
  * Author: Ishi
  */
 
@@ -10,19 +10,17 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.31');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.32');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
 final class LatePoint_Dashboard_Extender {
 
-    private static $processing = false;
     private static $rendering_custom_tabs = false;
     private static $dashboard_tab_frames = array();
 
     public static function init() {
-        add_filter('do_shortcode_tag', array(__CLASS__, 'filter_customer_dashboard_output'), 10, 4);
-        add_filter('do_shortcode_tag', array(__CLASS__, 'order_customer_dashboard_tabs'), 20, 4);
+        add_filter('do_shortcode_tag', array(__CLASS__, 'filter_customer_dashboard_output'), 20, 4);
         add_action('latepoint_customer_dashboard_after_tabs', array(__CLASS__, 'output_custom_tab_triggers'), 20, 1);
         add_action('latepoint_customer_dashboard_after_tab_contents', array(__CLASS__, 'output_custom_tab_contents'), 20, 1);
         add_action('latepoint_init', array(__CLASS__, 'load_latepoint_extension'), 20);
@@ -47,19 +45,7 @@ final class LatePoint_Dashboard_Extender {
     }
 
     public static function filter_customer_dashboard_output($output, $tag, $attr, $m) {
-        if ($tag !== 'latepoint_customer_dashboard' || self::$processing) {
-            return $output;
-        }
-
-        self::$processing = true;
-
-        try {
-            $output = self::rename_orders_tab($output);
-        } finally {
-            self::$processing = false;
-        }
-
-        return $output;
+        return self::order_customer_dashboard_tabs($output, $tag, $attr, $m);
     }
 
     public static function order_customer_dashboard_tabs($html, $tag, $attr, $m) {
@@ -109,6 +95,15 @@ final class LatePoint_Dashboard_Extender {
                     $nodes[$target] = $trigger;
                     $original[] = $target;
                 }
+                if (isset($nodes['.tab-content-customer-orders'])) {
+                    foreach ($xpath->query('.//text()', $nodes['.tab-content-customer-orders']) as $label) {
+                        if (preg_match('/^\\s*Orders\\s*$/i', $label->nodeValue)) {
+                            $label->nodeValue = preg_replace('/\\bOrders\\b/i', 'History', $label->nodeValue, 1);
+                            $changed = true;
+                            break;
+                        }
+                    }
+                }
                 // Native hooks create the tabs before this filter. Pagination
                 // changes selection here, within this dashboard's own wrapper.
                 if (self::requested_press_ons_page() && isset($nodes['.tab-content-ishi-customer-press-ons'])) {
@@ -142,52 +137,6 @@ final class LatePoint_Dashboard_Extender {
             libxml_clear_errors();
             libxml_use_internal_errors($previous);
         }
-    }
-
-    private static function rename_orders_tab($html) {
-        if (!is_string($html) || $html === '' || !class_exists('DOMDocument')) {
-            return $html;
-        }
-
-        $dom = new DOMDocument('1.0', 'UTF-8');
-        $previous = libxml_use_internal_errors(true);
-        $wrapped = '<!DOCTYPE html><html><body><div id="latepoint-dashboard-extender-root">' . $html . '</div></body></html>';
-
-        if (!$dom->loadHTML('<?xml encoding="UTF-8">' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previous);
-            return $html;
-        }
-
-        $xpath = new DOMXPath($dom);
-        $triggers = $xpath->query(
-            '//*[@id="latepoint-dashboard-extender-root"]//*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]'
-        );
-
-        if ($triggers !== false) {
-            foreach ($triggers as $trigger) {
-                if (strpos($trigger->getAttribute('data-tab-target'), 'tab-content-customer-orders') === false) {
-                    continue;
-                }
-
-                $nodes = $xpath->query('.//text()', $trigger);
-                if ($nodes !== false) {
-                    foreach ($nodes as $node) {
-                        if (preg_match('/^\s*Orders\s*$/i', $node->nodeValue)) {
-                            $node->nodeValue = preg_replace('/\bOrders\b/i', 'History', $node->nodeValue, 1);
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
-
-        $result = self::serialize_root($dom);
-
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
-
-        return $result;
     }
 
     /**
@@ -670,7 +619,7 @@ final class LatePoint_Dashboard_Extender {
                 break;
             }
             foreach ($orders as $order) {
-                if (!$order instanceof WC_Order || (int) $order->get_customer_id() !== (int) $customer_id || self::is_pure_latepoint_order($order)) {
+                if (!self::is_press_ons_order_for_customer($order, $customer_id)) {
                     continue;
                 }
                 if (count($result['orders']) === $per_page) {
@@ -740,6 +689,21 @@ final class LatePoint_Dashboard_Extender {
         }
         $press_trigger->setAttribute('class', $press_trigger->getAttribute('class') . ' active');
         $press_content->setAttribute('class', $press_content->getAttribute('class') . ' active');
+    }
+
+    /**
+     * Shared by the paginated list and lightbox. Always re-check ownership and
+     * visibility at request time, even when the query already restricts them.
+     */
+    public static function is_press_ons_order_for_customer($order, $customer_id) {
+        if (!$order instanceof WC_Order || (int) $customer_id <= 0
+            || (int) $order->get_customer_id() !== (int) $customer_id
+            || !function_exists('wc_get_order_types') || !function_exists('wc_get_order_statuses')) {
+            return false;
+        }
+        return in_array($order->get_type(), wc_get_order_types('view-orders'), true)
+            && in_array('wc-' . $order->get_status(), array_keys(wc_get_order_statuses()), true)
+            && !self::is_pure_latepoint_order($order);
     }
 
     private static function is_pure_latepoint_order($order) {
