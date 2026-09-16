@@ -32,6 +32,16 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
                 return outline === !selected && solid === selected && style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.color === getComputedStyle(n.parentElement).color;
             })), 'Only active custom icon is filled, without selected color/background');
         };
+        // Theme colors must remain live CSS references, including when a scheme changes.
+        await page.addStyleTag({ content: ':root{--theme-color-text_dark:#242530;--theme-color-text:#777b81;--theme-color-text_link:#ffabb4;--theme-color-alter_bg_color:#ffffff;--theme-color-alter_bg_hover:#f9f9f9;--theme-color-bd_color:#f8e0d2}' });
+        check(await leaf('appointments').evaluate(n => getComputedStyle(n).backgroundColor === 'rgb(255, 171, 180)' && getComputedStyle(n).color === 'rgb(36, 37, 48)'), 'Selected submenu uses theme accent and dark text');
+        await leaf('history').hover();
+        check(await leaf('history').evaluate(n => getComputedStyle(n).backgroundColor === 'rgb(249, 249, 249)'), 'Submenu hover uses theme surface');
+        await primary('account').hover();
+        check(await primary('account').evaluate(n => getComputedStyle(n).color === 'rgb(36, 37, 48)' && getComputedStyle(n).backgroundColor === 'rgba(0, 0, 0, 0)'), 'Primary hover retains theme ink and transparent background');
+        await page.evaluate(() => document.documentElement.style.setProperty('--theme-color-text_dark', '#123456'));
+        check(await primary('appointments').evaluate(n => getComputedStyle(n).color === 'rgb(18, 52, 86)'), 'Theme scheme change propagates without rebuilding navigation');
+        await page.evaluate(() => document.documentElement.style.removeProperty('--theme-color-text_dark'));
         await state('appointments', 'appointments');
         await leaf('history').click(); await state('history', 'appointments');
         check(await leaf('history').evaluate(n => {const s = getComputedStyle(n); return s.outlineStyle === 'none' && s.borderColor === 'rgba(0, 0, 0, 0)';}), 'Selected secondary has no border/outline');

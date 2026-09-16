@@ -1,9 +1,11 @@
 /* Layout only. Feature components retain their own styles and behavior. */
 .ishi-customer-dashboard {
-    --ishi-dashboard-accent: #b64d6b;
-    --ishi-dashboard-soft: #fff0f4;
-    --ishi-dashboard-border: #dedede;
-    --ishi-dashboard-ink: #42494d;
+    /* Resolve the current theme scheme here, rather than freezing its hex values. */
+    --ishi-dashboard-accent: var(--theme-color-text_link, ButtonFace);
+    --ishi-dashboard-soft: var(--theme-color-alter_bg_hover, ButtonFace);
+    --ishi-dashboard-border: var(--theme-color-bd_color, ButtonBorder);
+    --ishi-dashboard-ink: var(--theme-color-text_dark, CanvasText);
+    --ishi-dashboard-surface: var(--theme-color-alter_bg_color, Canvas);
     overflow-anchor: none;
     width: 100%;
     min-width: 0;
@@ -45,6 +47,8 @@
     box-shadow: none;
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control::after { content: none; }
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:hover,
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:focus,
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control[aria-selected="true"] {
     color: inherit;
     background: transparent;
@@ -66,7 +70,7 @@
     padding: .1rem .25rem;
     border-radius: 1rem;
     background: var(--ishi-dashboard-accent);
-    color: #fff;
+    color: var(--ishi-dashboard-ink);
     font-size: .75rem;
     line-height: 1.2;
     text-align: center;
@@ -95,7 +99,7 @@
     box-shadow: none;
     border: 1px solid transparent;
     border-radius: 2rem;
-    background: #f0f0f0;
+    background: var(--ishi-dashboard-surface);
     color: var(--ishi-dashboard-ink);
     font-size: .8rem;
     font-weight: 700;
@@ -103,15 +107,19 @@
     text-decoration: none;
     overflow-wrap: anywhere;
 }
-.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button[aria-selected="true"] {
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button:hover {
     background: var(--ishi-dashboard-soft);
-    color: var(--ishi-dashboard-accent);
+    color: var(--ishi-dashboard-ink);
+}
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button[aria-selected="true"] {
+    background: var(--ishi-dashboard-accent);
+    color: var(--ishi-dashboard-ink);
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:focus:not(:focus-visible),
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button:focus:not(:focus-visible) { outline: none; }
 .latepoint-w .ishi-customer-dashboard button:focus-visible,
 .latepoint-w .ishi-customer-dashboard [role="tabpanel"]:focus-visible {
-    outline: 3px solid var(--ishi-dashboard-accent);
+    outline: 3px solid var(--ishi-dashboard-ink);
     outline-offset: 3px;
 }
 /* Our explicit rules outrank LatePoint's .active display rules without !important. */

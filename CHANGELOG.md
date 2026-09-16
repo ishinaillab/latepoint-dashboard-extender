@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.6 - 2026-09-17
+
+- Use Qwery theme color variables for dashboard navigation, unread badges and Press-Ons additions, including modal content; use system colors when the theme variables are absent.
+- Keep primary icons the same theme dark color across hover and selection; retain filled-only selection.
+- Use theme surfaces for secondary normal/hover states and theme accent with dark text for selection. Use theme dark keyboard focus rings for visibility against pale surfaces.
+- Preserve typography, dimensions, submenu order, spacing and feature behavior.
+
 ## 0.11.5 - 2026-09-17
 
 - Replace the authored SVGs with the supplied Ishi custom calendar, nail, chat and avatar outline/filled font icons.

@@ -69,3 +69,7 @@ Automated PHP tests cover render-once components, Unicode/nonces/forms, optional
 | Errors/logs | PHP CLI suites and browser console | WordPress debug/PHP logs and browser console after deployment |
 
 The checked-in implementation is not evidence that these live staging operations have run. Keep the previous stable release available until staging passes and record exact installed versions. The inspected Pro source archive's header says 1.6.3 while the installed asset query version says 1.6.4; compatibility is based on the inspected implementation, not that ambiguous label alone.
+
+### Theme colors (0.11.6)
+
+Navigation and Press-Ons additions resolve Qwery's existing `--theme-color-*` variables at their rendered location. Primary icons retain `text_dark` across normal, hover and selection. Secondary controls use `alter_bg_color`, hover `alter_bg_hover`, and selected `text_link`, with `text_dark` labels. Focus rings and badge text also use `text_dark` for contrast with the current pale pink scheme. Dividers use `bd_color`; Press-Ons metadata uses `text`. Modal rules reference theme variables directly because native lightboxes can render outside the dashboard root. No theme hex values are copied. System color fallbacks support other themes. Theme scheme changes should be checked for text/focus contrast. Native component styles and LatePoint corner radii remain owned by their providers; dimensions and navigation behavior are unchanged.

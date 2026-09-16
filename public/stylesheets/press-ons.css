@@ -19,7 +19,7 @@
 }
 
 .ishi-press-ons-order-status {
-    color: #7c85a3;
+    color: var(--theme-color-text, GrayText);
     font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
@@ -39,7 +39,7 @@
 }
 
 .ishi-press-ons-order-item + .ishi-press-ons-order-item {
-    border-top: 1px solid #f1f1f1;
+    border-top: 1px solid var(--theme-color-bd_color, ButtonBorder);
 }
 
 .ishi-press-ons-order-item-image {
@@ -56,13 +56,13 @@
 }
 
 .ishi-press-ons-order-item-name {
-    color: #14161d;
+    color: var(--theme-color-text_dark, CanvasText);
     font-weight: 600;
     line-height: 1.35;
 }
 
 .ishi-press-ons-order-item-meta {
-    color: #7c85a3;
+    color: var(--theme-color-text, GrayText);
     font-size: 13px;
     margin-top: 3px;
 }
@@ -81,7 +81,7 @@
     align-items: center;
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #f1f1f1;
+    border-top: 1px solid var(--theme-color-bd_color, ButtonBorder);
 }
 
 .ishi-press-ons-order-card-footer .load-booking-summary-btn-w {
@@ -90,9 +90,9 @@
 
 .ishi-press-ons-empty {
     padding: 25px;
-    border: 1px solid #ddd;
-    background: #fff;
-    color: #7c85a3;
+    border: 1px solid var(--theme-color-bd_color, ButtonBorder);
+    background: var(--theme-color-alter_bg_color, Canvas);
+    color: var(--theme-color-text, GrayText);
     border-radius: var(--latepoint-border-radius);
 }
 
@@ -137,13 +137,13 @@
 }
 
 .ishi-press-ons-summary-item-main .sbc-subtle-item {
-    color: #7c85a3;
+    color: var(--theme-color-text, GrayText);
     font-size: 13px;
     margin-top: 3px;
 }
 
 .ishi-press-ons-summary-item-price {
-    color: var(--latepoint-body-color);
+    color: var(--theme-color-text, var(--latepoint-body-color, CanvasText));
     font-weight: 400;
     white-space: nowrap;
 }
@@ -164,7 +164,7 @@
 .ishi-press-ons-note + .ishi-press-ons-note {
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid #f1f1f1;
+    border-top: 1px solid var(--theme-color-bd_color, ButtonBorder);
 }
 
 .ishi-press-ons-note p:last-child {

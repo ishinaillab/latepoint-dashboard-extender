@@ -1,6 +1,6 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.11.5**
+Current version: **0.11.6**
 
 Organizes LatePoint's Customer Dashboard with server-rendered primary and secondary navigation while retaining its existing feature components.
 
@@ -88,4 +88,4 @@ To run the browser suite locally, install Playwright 1.62.1 in a separate test d
 4. Verify optional-provider fallback, native hooks, multiple instances and any custom direct-render/AJAX integration.
 5. Record the WordPress, PHP, LatePoint, Pro, Ishi and WooCommerce versions actually tested before tagging or deploying.
 
-GitHub commits do not deploy this plugin to WordPress automatically. Version 0.11.3 is the site owner’s tested baseline. Version 0.11.5 replaces the 0.11.4 SVG artwork with the supplied custom font pairs and enqueues the existing uploaded asset; verify the icons with the installed theme before deployment.
+GitHub commits do not deploy this plugin to WordPress automatically. Version 0.11.3 is the site owner’s tested baseline. Version 0.11.6 connects dashboard navigation and Press-Ons colors to the active Qwery theme scheme; verify with the installed theme before deployment.
