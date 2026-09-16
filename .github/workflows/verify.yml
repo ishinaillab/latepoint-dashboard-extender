@@ -32,3 +32,5 @@ jobs:
         run: php tests/run.php
       - name: Test without WooCommerce
         run: php tests/run.php --without-woocommerce
+      - name: Test Press-Ons pagination
+        run: php tests/pagination.php
