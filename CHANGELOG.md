@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.1 - 2026-09-17
+
+- Use non-submitting tab buttons without hash targets or navigation focus scrolling.
+- Place New Appointment after History and keep its submenu available during booking.
+- Apply compact submenu typography and one 40px gap to content.
+- Add Custom Press-Ons using the existing order cards, totals, modal and paginated query, restricted to orders with a custom-press-ons category item; mixed orders remain in both lists.
+- Keep category pagination independent and preserve customer ownership and existing eligibility checks.
+
 ## 0.11.0 - 2026-09-16
 
 - Group the server-rendered dashboard into Appointments, Press-Ons, Messages and Account.

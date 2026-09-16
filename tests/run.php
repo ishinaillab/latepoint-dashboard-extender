@@ -159,7 +159,7 @@ function xpath_for($html) {
 }
 function sequence($html) {
     $result = array();
-    foreach (xpath_for($html)->query('//*[contains(concat(" ", normalize-space(@class), " "), " customer-dashboard-tabs ")]/a') as $tab) {
+    foreach (xpath_for($html)->query('//*[contains(concat(" ", normalize-space(@class), " "), " customer-dashboard-tabs ")]/*') as $tab) {
         $result[] = $tab->hasAttribute('data-ishi-primary') ? $tab->getAttribute('data-ishi-primary') : $tab->getAttribute('data-tab-target');
     }
     return $result;
@@ -174,8 +174,8 @@ check($x->query('//form[@class="address-form"]')->length === 1, 'Only one addres
 check($x->query('//input[@name="address"]')->item(0)->getAttribute('value') === 'A & B', 'HTML form attributes preserved');
 check(strpos($output, '住所') !== false, 'Unicode shortcode content preserved');
 check($x->query('//span[@class="lp-new-messages-count"]')->item(0)->textContent === '3', 'Unread badge preserved');
-check($x->query('//a[contains(@class,"latepoint-trigger-messages-tab")]')->length === 1, 'Messages click-hook class preserved');
-check($x->query('//a[contains(@class,"active")]')->item(0)->getAttribute('data-tab-target') === '.tab-content-customer-bookings', 'Active tab preserved');
+check($x->query('//button[contains(@class,"latepoint-trigger-messages-tab")]')->length === 1, 'Messages click-hook class preserved');
+check($x->query('//button[contains(@class,"active")]')->item(0)->getAttribute('data-tab-target') === '.tab-content-customer-bookings', 'Active tab preserved');
 check($x->query('//input[@name="customer[first_name]"]')->item(0)->getAttribute('value') === 'Unchanged', 'Profile input preserved');
 render_dashboard($output);
 check($GLOBALS['shortcode_calls'] === 1, 'Existing Addresses panel is not rendered again');
@@ -233,7 +233,7 @@ check(sequence($order(dashboard() . dashboard())) === array_merge($single_sequen
 $duplicate = str_replace('>Profile</a>', '>Profile</a><a class="latepoint-tab-trigger" data-tab-target=".tab-content-customer-info-form">Duplicate</a>', dashboard());
 check($order($duplicate) === $duplicate, 'Ambiguous duplicate targets return original HTML');
 $double = render_dashboard(dashboard() . dashboard());
-check(substr_count($double, '>History</a>') === 2, 'History label applied independently to both dashboards');
+check(substr_count($double, '>History</button>') === 2, 'History label applied independently to both dashboards');
 $badged = str_replace('>Orders</a>', '><span>Orders</span><span class="count">2</span></a>', dashboard());
 check(strpos(render_dashboard($badged), '<span>History</span><span class="count">2</span>') !== false, 'History rename preserves nested badge markup');
 $source = file_get_contents(dirname(__DIR__) . '/latepoint-dashboard-extender.php');

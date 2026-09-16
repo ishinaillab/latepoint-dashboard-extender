@@ -44,6 +44,7 @@ jobs:
         run: |
           php tests/layout.php
           php tests/assets.php
+          php tests/custom-press-ons.php
       - name: Install isolated browser test runtime
         run: |
           npm install --prefix "$RUNNER_TEMP/ishi-browser-tests" --no-save --ignore-scripts --no-audit --no-fund playwright@1.62.1

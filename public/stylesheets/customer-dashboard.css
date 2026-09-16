@@ -4,6 +4,7 @@
     --ishi-dashboard-soft: #fff0f4;
     --ishi-dashboard-border: #dedede;
     --ishi-dashboard-ink: #42494d;
+    overflow-anchor: none;
     width: 100%;
     min-width: 0;
     color: var(--ishi-dashboard-ink);
@@ -36,6 +37,12 @@
     text-decoration: none;
     font-size: 1.5rem;
     line-height: 1;
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: none;
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control::after { content: none; }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control[aria-selected="true"] {
@@ -80,35 +87,38 @@
     display: flex;
     flex-wrap: wrap;
     gap: .5rem;
-    margin-bottom: 1rem;
+    margin: 0;
 }
-.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > a,
-.latepoint-w .ishi-customer-dashboard .ishi-dashboard-actions > a {
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button {
     display: inline-flex;
     box-sizing: border-box;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
+    min-height: 40px;
     margin: 0;
     padding: .6rem 1.1rem;
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: none;
     border: 1px solid transparent;
     border-radius: 2rem;
     background: #f0f0f0;
     color: var(--ishi-dashboard-ink);
-    font-size: .95rem;
-    font-weight: 600;
-    line-height: 1.4;
+    font-size: .8rem;
+    font-weight: 700;
+    line-height: 1.2;
     text-decoration: none;
     overflow-wrap: anywhere;
 }
-.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > a[aria-selected="true"] {
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-secondary > button[aria-selected="true"] {
     background: var(--ishi-dashboard-soft);
     color: var(--ishi-dashboard-accent);
     border-color: var(--ishi-dashboard-accent);
 }
-.ishi-customer-dashboard .ishi-dashboard-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-block: 0 1rem; }
-.latepoint-w .ishi-customer-dashboard .ishi-dashboard-actions > a { background: transparent; border-color: var(--ishi-dashboard-border); }
-.latepoint-w .ishi-customer-dashboard a:focus-visible,
+.latepoint-w .ishi-customer-dashboard button:focus-visible,
 .latepoint-w .ishi-customer-dashboard [role="tabpanel"]:focus-visible {
     outline: 3px solid var(--ishi-dashboard-accent);
     outline-offset: 3px;
@@ -116,9 +126,8 @@
 /* Our explicit rules outrank LatePoint's .active display rules without !important. */
 .ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-section[hidden],
 .ishi-customer-dashboard[data-ishi-enhanced] .latepoint-tab-content[hidden],
-.ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-secondary[hidden],
-.latepoint-w .ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-actions > a[hidden] { display: none; }
-/* Before enhancement (or without JS), anchor links reach real server-rendered views. */
+.ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-secondary[hidden] { display: none; }
+/* Before enhancement (or without JS), every owned view remains visible. */
 .ishi-customer-dashboard:not([data-ishi-enhanced]) .latepoint-tab-content[data-ishi-view] { display: block; margin-block: 1rem; }
 .ishi-customer-dashboard:not([data-ishi-enhanced]) .ishi-dashboard-section { margin-bottom: 2rem; }
 @media (min-width: 768px) {
@@ -128,3 +137,22 @@
 @media (prefers-reduced-motion: reduce) {
     .ishi-customer-dashboard { scroll-behavior: auto; }
 }
+
+/* One spacing owner: a 40px grid gap, without stacked native panel/form margins. */
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 40px;
+    align-content: start;
+}
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-section > .latepoint-tab-content {
+    margin-block: 0;
+    padding-block-start: 0;
+}
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-section > .latepoint-tab-content > :first-child,
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-section > .latepoint-tab-content > [data-ishi-ui],
+.latepoint-w .ishi-customer-dashboard [data-ishi-ui] > .woocommerce-MyAccount-content,
+.latepoint-w .ishi-customer-dashboard [data-ishi-ui] > .woocommerce-MyAccount-content > form {
+    margin-block-start: 0;
+}
+.latepoint-w .ishi-customer-dashboard[data-ishi-enhanced] .ishi-dashboard-section[hidden] { display: none; }

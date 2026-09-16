@@ -25,7 +25,7 @@ $before = $GLOBALS['shortcode_calls'];
 $filtered = render_dashboard($raw);
 check($GLOBALS['shortcode_calls'] === $before, 'Shortcode filters do not render Addresses again');
 check(sequence($filtered) === $expected, 'Requested tab order retained after native rendering');
-check(strpos($filtered, '>History</a>') !== false, 'Orders is still renamed History');
+check(strpos($filtered, '>History</button>') !== false, 'Orders is still renamed History');
 check(render_dashboard($filtered) === $filtered, 'Re-filtering does not duplicate custom tabs');
 
 $without_hooks = render_dashboard(dashboard(false));

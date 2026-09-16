@@ -15,18 +15,19 @@ The adapter parses only completed dashboard HTML, preflights known direct trigge
 | Appointments | .tab-content-customer-bookings | LatePoint |
 | History | .tab-content-customer-orders | LatePoint |
 | Press-Ons | .tab-content-ishi-customer-press-ons | This extension / WooCommerce APIs |
+| Custom Press-Ons | .tab-content-ishi-customer-custom-press-ons | Same order renderer; additional product category predicate |
 | Profile | .tab-content-customer-info-form | Ishi shortcode; native fallback |
 | Addresses | .tab-content-ishi-customer-addresses | Ishi shortcode; existing WooCommerce fallback |
 | Messages | .tab-content-customer-booking-messages | LatePoint Pro |
 | New Appointment | .tab-content-customer-new-appointment-form | LatePoint booking shortcode/handlers |
 
-All seven panels are server-rendered in the inspected installation. Their subsequent actions may use native AJAX/REST: appointments and order lightboxes, message loading/conversations, booking steps, and Ishi form saves. No replacement endpoints are introduced.
+The original seven panels are server-rendered in the inspected installation; this extension adds the eighth Custom Press-Ons panel through the same native hooks. Their subsequent actions may use native AJAX/REST: appointments and order lightboxes, message loading/conversations, booking steps, and Ishi form saves. No replacement endpoints are introduced.
 
 LatePoint's flat tab handler is delegated on `.latepoint-tab-triggers` and clears all descendant trigger/content active classes in its nearest `.latepoint-tabs-w`. It cannot safely own nested tab lists. The new navigation deliberately excludes that delegation class while retaining the wrapper, panel classes and feature selectors. One small layout handler owns selection for adapted dashboards only; native dashboards keep native switching.
 
-Pro binds `.latepoint-trigger-messages-tab` directly during initial page setup. The adapter preserves that exact anchor and its unread badge. Layout activation runs in capture phase, then the original event reaches Pro normally. No message reload/send handler is copied. Pro's conversation selection and polling contain global selectors: the layout can isolate its own state across multiple dashboards, but it cannot promise multiple independent native chat widgets when Pro itself does not support that arrangement.
+Pro binds `.latepoint-trigger-messages-tab` directly during initial page setup. The adapter preserves that trigger class, data attributes and unread badge on a non-submitting button before any browser handlers are bound. Pro’s inspected binding is class-based, not anchor-tag-based. Layout activation runs in capture phase, then the original event reaches Pro normally. No message reload/send handler is copied. Pro's conversation selection and polling contain global selectors: the layout can isolate its own state across multiple dashboards, but it cannot promise multiple independent native chat widgets when Pro itself does not support that arrangement.
 
-Booking remains the original panel with its native booking button/shortcode configuration. The New Appointment action selects it, and Back to appointments returns within the same section. Any native booking lightbox/step behavior remains owned by LatePoint.
+Booking remains the original panel with its native booking button/shortcode configuration. New Appointment is the third secondary tab after Appointments and History. The submenu stays visible during booking, so its sibling tabs provide the return path without forced focus movement. Any native booking lightbox/step behavior remains owned by LatePoint.
 
 Ishi Profile 1.4.0 supplies `[ishi_latepoint_profile]`; Ishi Addresses supplies `[ishi_customer_addresses]`. The inspected component scripts use delegated events and replace their own component contents after REST responses. The navigation wraps the existing components without entering those replaceable roots. Profile rendering is raw-shortcode substitution after navigation serialization, so no form fields/nonces are rebuilt.
 
@@ -34,7 +35,7 @@ Required assets remain LatePoint frontend CSS/JS, Pro Messages assets, Ishi UI/p
 
 ## State and initialization
 
-The active retained leaf panel is authoritative. The layout derives section visibility, selected controls and ARIA from it. There is no hash/history state, so Back/Forward retains normal page navigation. Press-Ons pagination still reloads the current dashboard URL with its existing parameter and selects Press-Ons server-side. Clicking another primary section selects its default leaf; clicking an already selected primary section keeps its current leaf.
+The active retained leaf panel is authoritative. The layout derives section visibility, selected controls and ARIA from it. There is no hash/history state, so Back/Forward retains normal page navigation. Order pagination reloads the current dashboard URL with the selected list’s parameter and selects that submenu server-side. Custom Press-Ons uses `ishi_custom_press_ons_page`; the original uses `ishi_press_ons_page`. Links remove the other parameter. Clicking another primary section selects its default leaf; clicking an already selected primary section keeps its current leaf.
 
 Handlers are delegated once and initialization is idempotent. Added adapted markup is detected without moving its content. Component-only AJAX replacements do not rebuild navigation. The observer can synchronize native changes to an owned active panel, but does not invent state when external code removes every active panel or replaces the dashboard with unrelated markup.
 
@@ -42,13 +43,13 @@ For custom direct PHP rendering, pass authorized native HTML to `LatePoint_Dashb
 
 ## Security and fallback
 
-Rendering and hiding panels are presentation only. Existing authentication, customer ownership, order eligibility, nonce validation, sanitization and permission callbacks remain the functional owners' responsibility and are unchanged. The Press-Ons controller, modal template, query policy and card implementation are unchanged by this layout release.
+Rendering and hiding panels are presentation only. Existing authentication, customer ownership, order eligibility, nonce validation, sanitization and permission callbacks remain the functional owners' responsibility and are unchanged. The Press-Ons controller, modal template, ownership/type/status policy and card implementation are unchanged. The shared query accepts a Custom Press-Ons mode that requires at least one product in `custom-press-ons` before counting eligible rows for pagination. Variations check their parent. Mixed orders retain all items and totals in both views.
 
-Logged-out/login HTML without the verified dashboard structure is returned unchanged. Missing DOM support or incompatible markup preserves native HTML. Unknown future add-on tabs trigger a full native-layout fallback, not silent omission. No-JS fallback exposes only owned server-rendered views and preserves anchor navigation; native interactive features still need their own scripts.
+Logged-out/login HTML without the verified dashboard structure is returned unchanged. Missing DOM support or incompatible markup preserves native HTML. Unknown future add-on tabs trigger a full native-layout fallback, not silent omission. No-JS fallback exposes only owned server-rendered views without requiring tab interaction; native interactive features still need their own scripts.
 
 ## Verification and staging matrix
 
-Automated PHP tests cover render-once components, Unicode/nonces/forms, optional/unknown targets, recursion/exception cleanup, native hooks, pagination/order policy, asset registration, unique identifiers, and release metadata. Automated Chromium checks use synthetic components and listeners. They verify the layout's event delivery, not backend operations.
+Automated PHP tests cover render-once components, Unicode/nonces/forms, optional/unknown targets, recursion/exception cleanup, native hooks, pagination/order policy, asset registration, unique identifiers, and release metadata. Automated Chromium checks also measure the 40px gap, requested typography, no-hash button markup and scroll position across view changes. PHP category tests cover mixed/variation orders, missing products, independent pagination, empty results and ownership. Automated Chromium checks use synthetic components and listeners. They verify the layout's event delivery, not backend operations.
 
 | Scenario | Automated evidence | Required staging check |
 | --- | --- | --- |
@@ -57,7 +58,7 @@ Automated PHP tests cover render-once components, Unicode/nonces/forms, optional
 | Messages | Trigger, badge, conversation markup and click delivery retained | Loading, conversation selection, sending, polling/unread updates |
 | Profile/password | Single shortcode; nonce preservation; form-event delivery | Actual save, password change, validation and notices |
 | Billing/shipping | Single component; component replacement and save-event simulation | Actual edit/save, validation and notices |
-| New Appointment/return | Panel activation and focus return | Native booking flow, modal, completion and cancellation |
+| New Appointment/return | Panel activation; persistent submenu and unchanged scroll position | Native booking flow, modal, completion and cancellation |
 | Logged-out | Non-dashboard HTML unchanged | Login, logout, session expiry and access boundaries |
 | Responsive layout | 320, 390, 768, 1280px; overflow and touch targets | Real component content, installed theme and icon font |
 | Keyboard | Arrow/Home/End/Enter/Space, focus and unique ARIA targets | Screen-reader announcements and native dialogs/forms |

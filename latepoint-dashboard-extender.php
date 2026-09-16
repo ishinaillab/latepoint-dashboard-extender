@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through native tab hooks and server-side navigation customization.
- * Version: 0.11.0
+ * Version: 0.11.1
  * Text Domain: latepoint-dashboard-extender
  * Author: Ishi
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.11.0');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.11.1');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 require_once LATEPOINT_DASHBOARD_EXTENDER_PATH . 'lib/dashboard-layout.php';
@@ -68,7 +68,7 @@ final class LatePoint_Dashboard_Extender {
 
     /** Explicit adapter for custom renderers. Pass native dashboard HTML before JSON encoding. */
     public static function transform_customer_dashboard_html($html) {
-        return Ishi_Customer_Dashboard_Layout::transform($html, self::requested_press_ons_page() > 0, self::$icons_available);
+        return Ishi_Customer_Dashboard_Layout::transform($html, self::requested_press_ons_page(true) > 0 ? 'custom-press-ons' : (self::requested_press_ons_page() > 0 ? 'press-ons' : false), self::$icons_available);
     }
 
     /** Backward-compatible adapter name; the layout is now hierarchical. */
@@ -94,6 +94,11 @@ final class LatePoint_Dashboard_Extender {
                     'label' => 'Press-Ons',
                     'target' => '.tab-content-ishi-customer-press-ons',
                     'content' => self::render_press_ons_content(),
+                ),
+                'custom-press-ons' => array(
+                    'label' => 'Custom Press-Ons',
+                    'target' => '.tab-content-ishi-customer-custom-press-ons',
+                    'content' => self::render_press_ons_content(true),
                 ),
             );
             $addresses = self::render_addresses_content();
@@ -141,18 +146,19 @@ final class LatePoint_Dashboard_Extender {
         }
     }
 
-    private static function render_press_ons_content() {
+    private static function render_press_ons_content($custom = false) {
+        $view = $custom ? 'custom-press-ons' : 'press-ons';
         $dom = new DOMDocument('1.0', 'UTF-8');
         $content = $dom->createElement('div');
-        $content->setAttribute('class', 'latepoint-tab-content tab-content-ishi-customer-press-ons');
-        $content->setAttribute('data-ishi-dashboard-tab', 'press-ons');
+        $content->setAttribute('class', 'latepoint-tab-content tab-content-ishi-customer-' . $view);
+        $content->setAttribute('data-ishi-dashboard-tab', $view);
         $inner = $dom->createElement('div');
         $inner->setAttribute('class', 'ishi-press-ons-shell');
-        $page = self::get_press_ons_orders();
+        $page = self::get_press_ons_orders($custom);
         if (empty($page['orders'])) {
             $empty = $dom->createElement('div');
             $empty->setAttribute('class', 'ishi-press-ons-empty');
-            $empty->appendChild($dom->createTextNode('No Press-On orders found.'));
+            $empty->appendChild($dom->createTextNode($custom ? __('No Custom Press-On orders found.', 'latepoint-dashboard-extender') : __('No Press-On orders found.', 'latepoint-dashboard-extender')));
             $inner->appendChild($empty);
         } else {
             $list = $dom->createElement('div');
@@ -165,7 +171,7 @@ final class LatePoint_Dashboard_Extender {
             }
             $inner->appendChild($list);
         }
-        self::append_press_ons_pagination($dom, $inner, $page);
+        self::append_press_ons_pagination($dom, $inner, $page, $custom);
         $content->appendChild($inner);
         return $dom->saveHTML($content);
     }
@@ -499,19 +505,20 @@ final class LatePoint_Dashboard_Extender {
         return $image;
     }
 
-    private static function requested_press_ons_page() {
+    private static function requested_press_ons_page($custom = false) {
+        $parameter = $custom ? 'ishi_custom_press_ons_page' : 'ishi_press_ons_page';
         // Read-only navigation, not an action; no nonce is required.
-        if (!isset($_GET['ishi_press_ons_page']) || !is_scalar($_GET['ishi_press_ons_page'])) {
+        if (!isset($_GET[$parameter]) || !is_scalar($_GET[$parameter])) {
             return 0;
         }
-        $page = filter_var(wp_unslash($_GET['ishi_press_ons_page']), FILTER_VALIDATE_INT, array(
+        $page = filter_var(wp_unslash($_GET[$parameter]), FILTER_VALIDATE_INT, array(
             'options' => array('min_range' => 1),
         ));
         return $page === false ? 0 : $page;
     }
 
-    private static function get_press_ons_orders() {
-        $requested_page = max(1, self::requested_press_ons_page());
+    private static function get_press_ons_orders($custom = false) {
+        $requested_page = max(1, self::requested_press_ons_page($custom));
         $result = array('orders' => array(), 'page' => 1, 'has_next' => false);
         if (!function_exists('wc_get_orders') || !function_exists('wc_get_order_types') || !function_exists('wc_get_order_statuses') || !is_user_logged_in()) {
             return $result;
@@ -556,7 +563,7 @@ final class LatePoint_Dashboard_Extender {
                 break;
             }
             foreach ($orders as $order) {
-                if (!self::is_press_ons_order_for_customer($order, $customer_id)) {
+                if (!self::is_press_ons_order_for_customer($order, $customer_id) || ($custom && !self::has_custom_press_ons_item($order))) {
                     continue;
                 }
                 if (count($result['orders']) === $per_page) {
@@ -576,15 +583,15 @@ final class LatePoint_Dashboard_Extender {
         return $result;
     }
 
-    private static function append_press_ons_pagination($dom, $parent, $page) {
+    private static function append_press_ons_pagination($dom, $parent, $page, $custom = false) {
         if ($page['page'] === 1 && !$page['has_next']) {
             return;
         }
         $nav = $dom->createElement('nav');
         $nav->setAttribute('class', 'ishi-press-ons-pagination');
-        $nav->setAttribute('aria-label', __('Press-Ons order pages', 'latepoint-dashboard-extender'));
+        $nav->setAttribute('aria-label', $custom ? __('Custom Press-Ons order pages', 'latepoint-dashboard-extender') : __('Press-Ons order pages', 'latepoint-dashboard-extender'));
         if ($page['page'] > 1) {
-            self::append_press_ons_page_link($dom, $nav, $page['page'] - 1, __('Previous', 'latepoint-dashboard-extender'), 'prev');
+            self::append_press_ons_page_link($dom, $nav, $page['page'] - 1, __('Previous', 'latepoint-dashboard-extender'), 'prev', $custom);
         }
         $label = $dom->createElement('span');
         $label->setAttribute('aria-current', 'page');
@@ -592,16 +599,16 @@ final class LatePoint_Dashboard_Extender {
         $label->appendChild($dom->createTextNode(sprintf(__('Page %d', 'latepoint-dashboard-extender'), $page['page'])));
         $nav->appendChild($label);
         if ($page['has_next']) {
-            self::append_press_ons_page_link($dom, $nav, $page['page'] + 1, __('Next', 'latepoint-dashboard-extender'), 'next');
+            self::append_press_ons_page_link($dom, $nav, $page['page'] + 1, __('Next', 'latepoint-dashboard-extender'), 'next', $custom);
         }
         $parent->appendChild($nav);
     }
 
-    private static function append_press_ons_page_link($dom, $nav, $page, $label, $rel) {
+    private static function append_press_ons_page_link($dom, $nav, $page, $label, $rel, $custom = false) {
         $link = $dom->createElement('a');
         // Keep the dashboard URL and unrelated query parameters, including page_id.
         // DOM serialization performs HTML attribute escaping.
-        $link->setAttribute('href', esc_url_raw(add_query_arg('ishi_press_ons_page', $page)));
+        $link->setAttribute('href', esc_url_raw(remove_query_arg($custom ? 'ishi_press_ons_page' : 'ishi_custom_press_ons_page', add_query_arg($custom ? 'ishi_custom_press_ons_page' : 'ishi_press_ons_page', $page))));
         $link->setAttribute('class', 'latepoint-btn latepoint-btn-primary latepoint-btn-outline latepoint-btn-sm');
         $link->setAttribute('rel', $rel);
         $link->appendChild($dom->createTextNode($label));
@@ -621,6 +628,18 @@ final class LatePoint_Dashboard_Extender {
         return in_array($order->get_type(), wc_get_order_types('view-orders'), true)
             && in_array('wc-' . $order->get_status(), array_keys(wc_get_order_statuses()), true)
             && !self::is_pure_latepoint_order($order);
+    }
+
+    /** Category filtering changes list membership, never ownership or order totals. */
+    private static function has_custom_press_ons_item($order) {
+        foreach ($order->get_items('line_item') as $item) {
+            $product = $item->get_product();
+            if (!$product) { continue; }
+            $product_id = $product->is_type('variation') && $product->get_parent_id()
+                ? $product->get_parent_id() : $product->get_id();
+            if (has_term('custom-press-ons', 'product_cat', $product_id)) { return true; }
+        }
+        return false;
     }
 
     private static function is_pure_latepoint_order($order) {

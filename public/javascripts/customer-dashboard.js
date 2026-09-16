@@ -32,7 +32,6 @@
         });
         owned(root, '.ishi-dashboard-primary, .ishi-dashboard-secondary').forEach(nav => set(nav, 'role', 'tablist'));
         owned(root, '.ishi-dashboard-secondary').forEach(nav => {
-            nav.hidden = group === 'appointments' && view === 'book' && nav.dataset.ishiSecondary === 'appointments';
             const links = Array.from(nav.querySelectorAll('.latepoint-tab-trigger'));
             // Hidden groups retain a usable default tab stop when next opened.
             links.forEach((link, index) => {
@@ -48,18 +47,6 @@
             });
         });
         panels(root).forEach(panel => { panel.hidden = panel !== active; });
-        owned(root, '.ishi-dashboard-actions').forEach(actions => {
-            const book = actions.querySelector('[data-ishi-view="book"]');
-            const back = actions.querySelector('[data-ishi-return]');
-            if (book) {
-                book.hidden = view === 'book';
-                const panel = panels(root).find(node => node.dataset.ishiView === 'book');
-                set(book, 'aria-controls', panel.id);
-                set(panel, 'role', 'region');
-                set(panel, 'aria-label', book.getAttribute('aria-label'));
-            }
-            if (back) back.hidden = view !== 'book';
-        });
         set(root, 'data-ishi-enhanced', 'true');
     }
 
@@ -90,7 +77,7 @@
     }
 
     document.addEventListener('click', event => {
-        const control = event.target.closest && event.target.closest('a[data-ishi-open-view], .latepoint-tab-trigger[data-ishi-view]');
+        const control = event.target.closest && event.target.closest('[data-ishi-open-view], .latepoint-tab-trigger[data-ishi-view]');
         if (!control || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         const root = control.closest(selector);
         if (!root) return;
@@ -98,17 +85,12 @@
         const key = control.dataset.ishiOpenView || control.dataset.ishiView;
         // Capture phase updates visibility before Pro's existing Messages click
         // handler runs. Do not stop propagation or duplicate any business handler.
-        const wasBook = panels(root).some(panel => panel.dataset.ishiView === 'book' && panel.classList.contains('active'));
         if (control.hasAttribute('data-ishi-open-view')) {
             if (control.hasAttribute('data-ishi-primary') && control.getAttribute('aria-selected') === 'true') return;
             const native = triggers(root).find(node => node.dataset.ishiView === key);
             if (native) native.click();
         } else {
             activate(root, key);
-        }
-        if (control.hasAttribute('data-ishi-return') || (key === 'book' && !wasBook)) {
-            const focus = key === 'book' ? root.querySelector('[data-ishi-return]') : triggers(root).find(node => node.dataset.ishiView === 'appointments');
-            if (focus) focus.focus();
         }
     }, true);
 
@@ -125,11 +107,11 @@
         else if (event.key === 'Home') index = 0;
         else if (event.key === 'End') index = tabs.length - 1;
         else if (event.key === ' ') { event.preventDefault(); tab.click(); return; }
-        else return; // Enter retains the anchor's native click behavior.
+        else return; // Enter retains the button's native click behavior.
         event.preventDefault();
         const target = tabs[(index + tabs.length) % tabs.length];
         tabs.forEach(node => set(node, 'tabindex', node === target ? 0 : -1));
-        target.focus();
+        target.focus({ preventScroll: true });
     });
 
     // Observe new markup only; ordinary form replacements do not rebuild navigation.

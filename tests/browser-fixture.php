@@ -4,9 +4,9 @@ if (PHP_SAPI !== 'cli') { exit; }
 ob_start();
 require __DIR__ . '/pagination.php';
 ob_end_clean();
-$_GET = in_array('--page-two', $argv, true) ? array('ishi_press_ons_page' => '2') : array();
+$_GET = in_array('--custom-page-two', $argv, true) ? array('ishi_custom_press_ons_page' => '2') : (in_array('--page-two', $argv, true) ? array('ishi_press_ons_page' => '2') : array());
 $GLOBALS['paging_orders'] = array();
-for ($id = 1; $id <= 23; $id++) { $GLOBALS['paging_orders'][] = new WC_Order($id); }
+for ($id = 1; $id <= 23; $id++) { $GLOBALS['paging_orders'][] = new WC_Order($id, $id % 2 === 0 ? array(1, 77) : array(1)); }
 $GLOBALS['address_enabled'] = true;
 $GLOBALS['profile_enabled'] = true;
 $GLOBALS['profile_calls'] = 0;

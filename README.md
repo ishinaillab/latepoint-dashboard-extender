@@ -1,6 +1,6 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.11.0**
+Current version: **0.11.1**
 
 Organizes LatePoint's Customer Dashboard with server-rendered primary and secondary navigation while retaining its existing feature components.
 
@@ -8,12 +8,12 @@ Organizes LatePoint's Customer Dashboard with server-rendered primary and second
 
 | Primary section | Views |
 | --- | --- |
-| Appointments | Appointments, History; New Appointment action |
-| Press-Ons | Existing WooCommerce order cards and lightbox |
+| Appointments | Appointments, History, New Appointment |
+| Press-Ons | Press-Ons, Custom Press-Ons; shared order cards and lightbox |
 | Messages | Native LatePoint Pro conversations |
 | Account | Ishi Profile, Ishi Addresses |
 
-Primary controls use the existing Nails icon font with accessible names. Appointments and Account have secondary navigation. Single-view sections do not. Missing optional providers are omitted; unknown add-on targets or ambiguous markup preserve the original dashboard rather than discard functionality.
+Primary controls use the existing Nails icon font with accessible names. Appointments, Press-Ons and Account have secondary navigation. Messages remains a single view. Missing optional providers are omitted; unknown add-on targets or ambiguous markup preserve the original dashboard rather than discard functionality.
 
 Profile uses the registered `[ishi_latepoint_profile]` component once per dashboard, replacing the native profile panel's contents. If that provider is unavailable or returns an invalid non-string result, the native profile remains. An intentional empty string remains empty. Addresses still uses `[ishi_customer_addresses]` once, or the existing WooCommerce fallback when its endpoint API is available. Neither integration duplicates form/save logic.
 
@@ -31,19 +31,23 @@ The caller must already have rendered authorized dashboard HTML and arranged the
 
 The retained active content panel is the selection authority. Primary selection, secondary selection, visibility and ARIA derive from it. The redesigned navigation omits LatePoint's flat `latepoint-tab-triggers` delegation class, whose descendant-wide clearing conflicts with nested navigation. Native feature trigger classes, data attributes and bubbling events remain available, including Pro Messages. There is no additional URL/hash router or per-section state store. Press-Ons pagination retains its existing query parameter behavior.
 
-Arrow keys and Home/End move tab focus; Enter/Space activate. Booking navigation provides a return action and predictable focus. Before JavaScript enhancement, the owned views are server-rendered and reachable with anchor links. This does not make JavaScript-dependent native forms or messaging work without their required scripts.
+Navigation uses non-submitting buttons without hash destinations, preventing browser/theme anchor scrolling. Arrow keys and Home/End move focus without scrolling; Enter/Space activate. New Appointment is the third Appointments submenu, after History; its sibling submenus remain available to return. Before JavaScript enhancement, all owned views remain server-rendered and visible. This does not make JavaScript-dependent native forms or messaging work without their required scripts.
 
 Layout assets use WordPress enqueue dependencies on LatePoint's frontend handle. The existing `elementor-icons-nails_skin_elementor_icons` stylesheet is reused when registered, otherwise its verified path under the site's uploads directory is enqueued if readable. Font files are not copied. If unavailable, controls display text labels. No Elementor runtime or fixed dashboard page URL is required.
+
+Submenus use `.8rem` font size, `1.2` line height, `700` font weight and a `40px` minimum height. A single grid gap provides 40px between the submenu row and its content, with native outer top spacing normalized.
 
 ## Press-Ons pagination
 
 Press-Ons uses the same default page size as WooCommerce My Account → Orders: WordPress's `posts_per_page` setting (normally 10). A positive `limit` supplied through `woocommerce_my_account_my_orders_query` is honored. Other query overrides are not copied; order ownership, types, and statuses remain restricted. Invalid or unlimited limits fall back to the finite site default.
 
-Previous/Next links use `ishi_press_ons_page` on the existing dashboard URL, preserving other query parameters and selecting Press-Ons after navigation. The normal initial visit still selects Appointments. Invalid page values use page one; requests beyond the end display the last eligible page.
+Previous/Next links use `ishi_press_ons_page` or `ishi_custom_press_ons_page` on the existing dashboard URL. Each removes the other list’s pagination parameter while preserving unrelated parameters and selects the appropriate submenu after navigation. The normal initial visit still selects Appointments. Invalid page values use page one; requests beyond the end display the last eligible page.
 
 Eligibility is checked before pages are filled: pure LatePoint-category orders are excluded, while mixed orders, missing products, and empty orders retain their existing treatment. Queries use WooCommerce's order API in batches of 50, with date/ID sorting. Only the current page is retained, and scanning stops once another eligible order establishes that Next is available. There is no unfiltered total/page count.
 
 This avoids loading every order at once, but deep pages or histories dominated by excluded orders can still require scanning many batches. No database-specific SQL, persistent classification metadata, or cache is introduced.
+
+**Custom Press-Ons** reuses the same renderer and query pipeline, adding a category check before pagination. An eligible order appears there when at least one existing line-item product belongs directly to the `custom-press-ons` category; variations use their parent product’s category. Mixed orders appear in both lists with complete items and original totals. Missing/deleted products cannot establish a category match. The original list is unchanged. Each list has its own bounded page scan; a sparse custom category may require scanning many batches. The category is a list filter, not a new authorization boundary; the existing lightbox remains available for every eligible owned order.
 
 Both the dashboard list and lightbox use the same ownership, viewable order type/status, and category eligibility check. The lightbox re-checks these rules on every request and returns an error when WooCommerce's order API is unavailable.
 
@@ -70,6 +74,7 @@ php tests/order-policy.php
 php tests/order-policy.php --without-woocommerce
 php tests/layout.php
 php tests/assets.php
+php tests/custom-press-ons.php
 ```
 
 GitHub Actions runs PHP lint, these isolated regression suites and Playwright browser checks. Browser tests use synthetic customer data and feature-event doubles: they verify navigation, ARIA references, keyboard/focus, responsive widths, pagination selection, independent layout instances, component replacement and initialization idempotence. They do not perform real WordPress saves, booking, payment or messaging requests.
@@ -84,4 +89,4 @@ To run the browser suite locally, install Playwright 1.62.1 in a separate test d
 4. Verify optional-provider fallback, native hooks, multiple instances and any custom direct-render/AJAX integration.
 5. Record the WordPress, PHP, LatePoint, Pro, Ishi and WooCommerce versions actually tested before tagging or deploying.
 
-GitHub commits do not deploy this plugin to WordPress automatically. Version 0.11.0 requires staging integration validation; the previous stable release remains available.
+GitHub commits do not deploy this plugin to WordPress automatically. Version 0.11.0 was tested and accepted by the site owner. Version 0.11.1 adds the requested styling/navigation refinements and category submenu; verify these changes with real site content before deployment.

@@ -31,6 +31,7 @@ final class Ishi_Customer_Dashboard_Layout {
                 'appointments' => '.tab-content-customer-bookings',
                 'history' => '.tab-content-customer-orders',
                 'press-ons' => '.tab-content-ishi-customer-press-ons',
+                'custom-press-ons' => '.tab-content-ishi-customer-custom-press-ons',
                 'profile' => '.tab-content-customer-info-form',
                 'addresses' => '.tab-content-ishi-customer-addresses',
                 'book' => '.tab-content-customer-new-appointment-form',
@@ -65,6 +66,7 @@ final class Ishi_Customer_Dashboard_Layout {
                     'appointments' => __('Appointments', 'latepoint-dashboard-extender'),
                     'history' => __('History', 'latepoint-dashboard-extender'),
                     'press-ons' => __('Press-Ons', 'latepoint-dashboard-extender'),
+                    'custom-press-ons' => __('Custom Press-Ons', 'latepoint-dashboard-extender'),
                     'messages' => __('Messages', 'latepoint-dashboard-extender'),
                     'account' => __('Account', 'latepoint-dashboard-extender'),
                     'profile' => __('Profile', 'latepoint-dashboard-extender'),
@@ -86,8 +88,20 @@ final class Ishi_Customer_Dashboard_Layout {
                 foreach ($views as $key => $view) {
                     if (self::has_class($view['panel'], 'active')) { $active = $key; break; }
                 }
-                if ($press_ons_page && isset($views['press-ons'])) { $active = 'press-ons'; }
-                foreach ($views as $key => $view) {
+                if ($press_ons_page === true) { $press_ons_page = 'press-ons'; }
+                if (in_array($press_ons_page, array('press-ons', 'custom-press-ons'), true) && isset($views[$press_ons_page])) { $active = $press_ons_page; }
+                foreach ($views as $key => &$view) {
+                    // Tabs are controls, not destinations. Keep feature classes/data attributes
+                    // while removing anchor hashes that theme smooth-scroll handlers can follow.
+                    $button = self::element($dom, 'button', array('type' => 'button'));
+                    foreach ($view['trigger']->attributes as $attribute) {
+                        if (!in_array($attribute->name, array('href', 'target', 'type'), true)) {
+                            $button->setAttribute($attribute->name, $attribute->value);
+                        }
+                    }
+                    while ($view['trigger']->firstChild) { $button->appendChild($view['trigger']->firstChild); }
+                    $view['trigger']->parentNode->replaceChild($button, $view['trigger']);
+                    $view['trigger'] = $button;
                     foreach ($view as $node) {
                         $classes = trim(preg_replace('/(^|\s)active(?=\s|$)/', '', $node->getAttribute('class')));
                         $node->setAttribute('class', $classes . ($active === $key ? ' active' : ''));
@@ -95,29 +109,29 @@ final class Ishi_Customer_Dashboard_Layout {
                     }
                     $view['panel']->setAttribute('id', $prefix . '-view-' . $key);
                     $view['trigger']->setAttribute('id', $prefix . '-trigger-' . $key);
-                    $view['trigger']->setAttribute('href', '#' . $prefix . '-view-' . $key);
                     $view['trigger']->setAttribute('aria-label', $labels[$key]);
                     // Only the label text changes. Retain the Pro Messages badge and all hook attributes.
                     $label = $xpath->query('.//text()[normalize-space(.) != ""]', $view['trigger'])->item(0);
                     if ($label) { $label->nodeValue = $labels[$key]; }
                     else { $view['trigger']->appendChild($dom->createTextNode($labels[$key])); }
                 }
+                unset($view);
                 // Deliberately omit latepoint-tab-triggers on redesigned navigation:
                 // its flat descendant handler cannot own this two-level interface.
                 $primary = self::element($dom, 'div', array('class' => 'customer-dashboard-tabs ishi-dashboard-primary', 'aria-label' => __('Customer dashboard', 'latepoint-dashboard-extender')));
                 $wrapper->insertBefore($primary, $old_nav);
-                $groups = array('appointments' => array('appointments', 'history', 'book'), 'press-ons' => array('press-ons'), 'messages' => array('messages'), 'account' => array('profile', 'addresses'));
+                $groups = array('appointments' => array('appointments', 'history', 'book'), 'press-ons' => array('press-ons', 'custom-press-ons'), 'messages' => array('messages'), 'account' => array('profile', 'addresses'));
                 $icons = array('appointments' => 'calendar', 'press-ons' => 'nail', 'messages' => 'comment-light', 'account' => 'avatar');
                 foreach ($groups as $group => $keys) {
                     $keys = array_values(array_filter($keys, static function ($key) use ($views) { return isset($views[$key]); }));
                     if (!$keys) { continue; }
                     $section = self::element($dom, 'section', array('id' => $prefix . '-section-' . $group, 'class' => 'ishi-dashboard-section', 'data-ishi-section' => $group));
                     $wrapper->insertBefore($section, $old_nav);
-                    $leaf_keys = array_values(array_diff($keys, array('book')));
+                    $leaf_keys = $keys;
                     if (count($leaf_keys) === 1) {
                         $primary_trigger = $views[$leaf_keys[0]]['trigger'];
                     } else {
-                        $primary_trigger = self::element($dom, 'a', array('href' => '#' . $section->getAttribute('id'), 'data-ishi-open-view' => $leaf_keys[0]));
+                        $primary_trigger = self::element($dom, 'button', array('type' => 'button', 'data-ishi-open-view' => $leaf_keys[0]));
                     }
                     $primary_trigger->setAttribute('class', $primary_trigger->getAttribute('class') . ' ishi-dashboard-primary-control');
                     $primary_trigger->setAttribute('id', $prefix . '-primary-' . $group);
@@ -137,12 +151,6 @@ final class Ishi_Customer_Dashboard_Layout {
                         $secondary = self::element($dom, 'div', array('class' => 'ishi-dashboard-secondary', 'data-ishi-secondary' => $group, 'aria-label' => $labels[$group]));
                         foreach ($leaf_keys as $key) { $secondary->appendChild($views[$key]['trigger']); }
                         $section->appendChild($secondary);
-                    }
-                    if (in_array('book', $keys, true)) {
-                        $actions = self::element($dom, 'div', array('class' => 'ishi-dashboard-actions'));
-                        $actions->appendChild($views['book']['trigger']);
-                        $actions->appendChild(self::element($dom, 'a', array('href' => '#' . $views['appointments']['panel']->getAttribute('id'), 'data-ishi-open-view' => 'appointments', 'data-ishi-return' => '1'), __('Back to appointments', 'latepoint-dashboard-extender')));
-                        $section->appendChild($actions);
                     }
                     foreach ($keys as $key) {
                         $views[$key]['trigger']->setAttribute('data-ishi-group', $group);

@@ -25,11 +25,17 @@ if (!function_exists('wc_get_orders')) {
         $query[$name] = $value;
         return $parts['path'] . '?' . http_build_query($query);
     }
+    function remove_query_arg($name, $url) {
+        $parts = parse_url($url);
+        parse_str($parts['query'] ?? '', $query);
+        unset($query[$name]);
+        return $parts['path'] . '?' . http_build_query($query);
+    }
     function wc_get_order_types($context) { return array('shop_order'); }
     function wc_get_order_statuses() { return array('wc-completed' => 'Completed'); }
     function wc_get_order_status_name($status) { return 'Completed'; }
     function wc_price($amount, $args = array()) { return '<span class="amount">$' . $amount . '</span>'; }
-    function has_term($term, $taxonomy, $id) { return $id === 99; }
+    function has_term($term, $taxonomy, $id) { return $term === 'latepoint' ? $id === 99 : ($term === 'custom-press-ons' && $id === 77); }
     function wc_get_orders($args) {
         $GLOBALS['paging_queries'][] = $args;
         $orders = array_filter($GLOBALS['paging_orders'], function ($order) use ($args) {
@@ -182,7 +188,7 @@ $_GET = array('ishi_press_ons_page' => '2');
 $output = render_dashboard(dashboard());
 $x = xpath_for($output);
 check($x->query('//article[@data-order-id]')->length === 10, 'Only current-page cards are rendered');
-check($x->query('//a[contains(concat(" ",normalize-space(@class)," ")," active ")]')->item(0)->getAttribute('data-tab-target') === '.tab-content-ishi-customer-press-ons', 'Press-Ons remains selected on pagination');
+check($x->query('//button[contains(concat(" ",normalize-space(@class)," ")," active ")]')->item(0)->getAttribute('data-tab-target') === '.tab-content-ishi-customer-press-ons', 'Press-Ons remains selected on pagination');
 check($x->query('//div[contains(concat(" ",normalize-space(@class)," ")," latepoint-tab-content ") and contains(concat(" ",normalize-space(@class)," ")," active ")]')->length === 1, 'Exactly one active panel');
 $previous = $x->query('//nav[@class="ishi-press-ons-pagination"]/a[@rel="prev"]')->item(0);
 check($previous !== null, 'Second page has Previous link');
@@ -194,15 +200,15 @@ $x = xpath_for(render_dashboard(dashboard()));
 check($x->query('//nav/a[@rel="prev"]')->length === 0 && $x->query('//nav/a[@rel="next"]')->length === 1, 'First page has only Next');
 $_GET = array();
 $x = xpath_for(render_dashboard(dashboard()));
-check($x->query('//a[contains(concat(" ",normalize-space(@class)," ")," active ")]')->item(0)->getAttribute('data-tab-target') === '.tab-content-customer-bookings', 'Normal visit retains default Appointments selection');
+check($x->query('//button[contains(concat(" ",normalize-space(@class)," ")," active ")]')->item(0)->getAttribute('data-tab-target') === '.tab-content-customer-bookings', 'Normal visit retains default Appointments selection');
 $GLOBALS['paging_orders'] = array(new WC_Order(1));
 $x = xpath_for(render_dashboard(dashboard()));
 check($x->query('//nav[@class="ishi-press-ons-pagination"]')->length === 0, 'Single page has no pagination controls');
 $GLOBALS['paging_queries'] = array();
 $native_html = dashboard();
-check(count($GLOBALS['paging_queries']) === 1, 'Native trigger/content pair queries orders once');
+check(count($GLOBALS['paging_queries']) === 2, 'Each order view queries once per native render');
 $once_filtered = render_dashboard($native_html);
 render_dashboard($once_filtered);
-check(count($GLOBALS['paging_queries']) === 1, 'Shortcode post-processing never repeats the order query');
+check(count($GLOBALS['paging_queries']) === 2, 'Shortcode post-processing never repeats either order query');
 check(xpath_for($once_filtered)->query('//article[@data-order-id]')->length === 1, 'Prepared order cards are emitted once by native content hook');
 echo 'PASS: ' . ($checks - $start_checks) . " pagination checks\n";
