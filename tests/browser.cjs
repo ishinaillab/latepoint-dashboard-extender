@@ -39,7 +39,7 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
         await leaf('history').hover();
         check(await leaf('history').evaluate(n => getComputedStyle(n).backgroundColor === 'rgba(241, 139, 150, 0.19)' && getComputedStyle(n).color === 'rgb(241, 139, 150)'), 'Hover submenu colors');
         await primary('account').hover();
-        check(await primary('account').evaluate(n => {const s=getComputedStyle(n); return s.color === 'rgb(241, 139, 150)' && s.borderBottomColor === s.color && s.boxShadow.includes(s.color);}), 'Hover icon color border and shadow');
+        check(await primary('account').evaluate(n => {const s=getComputedStyle(n); return s.color === 'rgb(241, 139, 150)' && s.borderBottomColor === 'rgba(0, 0, 0, 0.03)' && s.boxShadow.includes('rgb(221, 221, 221)');}), 'Hover changes icon color while retaining normal border and shadow');
         check(await primary('appointments').evaluate(n => {const s=getComputedStyle(n); return s.color === 'rgb(241, 139, 150)' && s.borderBottomWidth === '3px' && s.borderBottomColor === s.color && s.boxShadow.includes(s.color);}), 'Active icon color border and shadow');
         await state('appointments', 'appointments');
         await leaf('history').click(); await state('history', 'appointments');

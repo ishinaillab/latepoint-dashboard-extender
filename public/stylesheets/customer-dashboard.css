@@ -46,7 +46,10 @@
     box-shadow: inset 0 -1px 0 0 #ddd;
 }
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control::after { content: none; }
-.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:hover,
+.latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control:hover {
+    color: #f18b96;
+}
+/* Only selection changes the control underline and inset shadow. */
 .latepoint-w .ishi-customer-dashboard .ishi-dashboard-primary-control[aria-selected="true"] {
     color: #f18b96;
     border-bottom-color: #f18b96;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.8 - 2026-09-17
+
+- Remove hover-only primary-control border and inset-shadow changes. Hover retains the normal underline/shadow; selected controls retain their pink underline/shadow.
+- Preserve hover icon color and all submenu styles.
+
 ## 0.11.7 - 2026-09-17
 
 - Apply the requested exact primary icon colors, per-control inset shadows and bottom borders; remove the primary navigation wrapper border.
