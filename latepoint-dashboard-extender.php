@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LatePoint Dashboard Extender
  * Description: Extends the native LatePoint Customer Dashboard through server-side shortcode output composition.
- * Version: 0.10.29
+ * Version: 0.10.30
  * Author: Ishi
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.29');
+define('LATEPOINT_DASHBOARD_EXTENDER_VERSION', '0.10.30');
 define('LATEPOINT_DASHBOARD_EXTENDER_PATH', plugin_dir_path(__FILE__));
 define('LATEPOINT_DASHBOARD_EXTENDER_URL', plugin_dir_url(__FILE__));
 
@@ -256,7 +256,8 @@ final class LatePoint_Dashboard_Extender {
         $inner = $dom->createElement('div');
         $inner->setAttribute('class', 'ishi-press-ons-shell');
 
-        $orders = self::get_press_ons_orders();
+        $page = self::get_press_ons_orders();
+        $orders = $page['orders'];
 
         if (empty($orders)) {
             $empty = $dom->createElement('div');
@@ -277,6 +278,7 @@ final class LatePoint_Dashboard_Extender {
             $inner->appendChild($list);
         }
 
+        self::append_press_ons_pagination($dom, $inner, $page);
         $press_content->appendChild($inner);
 
         $orders_content = $xpath->query(
@@ -292,6 +294,8 @@ final class LatePoint_Dashboard_Extender {
         } else {
             $root->appendChild($press_content);
         }
+
+        self::activate_press_ons_tab($xpath, $trigger_container, $press_trigger, $press_content);
 
         $result = self::serialize_root($dom);
 
@@ -706,52 +710,133 @@ final class LatePoint_Dashboard_Extender {
         return $image;
     }
 
-    private static function get_press_ons_orders() {
-        if (!function_exists('wc_get_orders') || !function_exists('wc_get_order_types') || !function_exists('wc_get_order_statuses')) {
-            return array();
+    private static function requested_press_ons_page() {
+        // Read-only navigation, not an action; no nonce is required.
+        if (!isset($_GET['ishi_press_ons_page']) || !is_scalar($_GET['ishi_press_ons_page'])) {
+            return 0;
         }
+        $page = filter_var(wp_unslash($_GET['ishi_press_ons_page']), FILTER_VALIDATE_INT, array(
+            'options' => array('min_range' => 1),
+        ));
+        return $page === false ? 0 : $page;
+    }
 
-        if (!is_user_logged_in()) {
-            return array();
+    private static function get_press_ons_orders() {
+        $requested_page = max(1, self::requested_press_ons_page());
+        $result = array('orders' => array(), 'page' => 1, 'has_next' => false);
+        if (!function_exists('wc_get_orders') || !function_exists('wc_get_order_types') || !function_exists('wc_get_order_statuses') || !is_user_logged_in()) {
+            return $result;
         }
 
         $customer_id = get_current_user_id();
-
         if (!$customer_id) {
-            return array();
+            return $result;
         }
 
-        $orders = wc_get_orders(
-            array(
+        // WooCommerce account/orders uses WC_Order_Query's posts_per_page default.
+        // Read only the positive limit override; never import another customer scope.
+        $default_limit = max(1, (int) get_option('posts_per_page', 10));
+        $account_args = apply_filters('woocommerce_my_account_my_orders_query', array(
+            'customer' => $customer_id,
+            'page' => $requested_page,
+            'paginate' => true,
+        ));
+        $limit = is_array($account_args) && isset($account_args['limit'])
+            ? filter_var($account_args['limit'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)))
+            : false;
+        $per_page = $limit === false ? $default_limit : $limit;
+
+        // Filter eligibility before counting a displayed page. Retain only one
+        // page of orders and stop at the first eligible order on the next page.
+        // Product-category predicates cannot be expressed portably in WC_Order_Query.
+        $batch_size = 50;
+        $offset = 0;
+        do {
+            $orders = wc_get_orders(array(
                 'customer_id' => $customer_id,
-                'type'        => wc_get_order_types('view-orders'),
-                'status'      => array_keys(wc_get_order_statuses()),
-                'limit'       => -1,
-                'orderby'     => 'date',
-                'order'       => 'DESC',
-                'return'      => 'objects',
-            )
-        );
-
-        if (!is_array($orders)) {
-            return array();
-        }
-
-        $qualifying = array();
-
-        foreach ($orders as $order) {
-            if (!$order instanceof WC_Order) {
-                continue;
+                'type' => wc_get_order_types('view-orders'),
+                'status' => array_keys(wc_get_order_statuses()),
+                'limit' => $batch_size,
+                'offset' => $offset,
+                'paginate' => false,
+                'orderby' => array('date' => 'DESC', 'ID' => 'DESC'),
+                'order' => 'DESC',
+                'return' => 'objects',
+            ));
+            if (!is_array($orders)) {
+                break;
             }
-
-            if (self::is_pure_latepoint_order($order)) {
-                continue;
+            foreach ($orders as $order) {
+                if (!$order instanceof WC_Order || (int) $order->get_customer_id() !== (int) $customer_id || self::is_pure_latepoint_order($order)) {
+                    continue;
+                }
+                if (count($result['orders']) === $per_page) {
+                    if ($result['page'] === $requested_page) {
+                        $result['has_next'] = true;
+                        return $result;
+                    }
+                    $result['page']++;
+                    $result['orders'] = array();
+                }
+                $result['orders'][$order->get_id()] = $order;
             }
+            $offset += $batch_size;
+        } while (count($orders) === $batch_size);
 
-            $qualifying[$order->get_id()] = $order;
+        // Requests beyond the last page show the last nonempty eligible page.
+        return $result;
+    }
+
+    private static function append_press_ons_pagination($dom, $parent, $page) {
+        if ($page['page'] === 1 && !$page['has_next']) {
+            return;
         }
+        $nav = $dom->createElement('nav');
+        $nav->setAttribute('class', 'ishi-press-ons-pagination');
+        $nav->setAttribute('aria-label', __('Press-Ons order pages', 'latepoint-dashboard-extender'));
+        if ($page['page'] > 1) {
+            self::append_press_ons_page_link($dom, $nav, $page['page'] - 1, __('Previous', 'latepoint-dashboard-extender'), 'prev');
+        }
+        $label = $dom->createElement('span');
+        $label->setAttribute('aria-current', 'page');
+        /* translators: %d: current Press-Ons page number. */
+        $label->appendChild($dom->createTextNode(sprintf(__('Page %d', 'latepoint-dashboard-extender'), $page['page'])));
+        $nav->appendChild($label);
+        if ($page['has_next']) {
+            self::append_press_ons_page_link($dom, $nav, $page['page'] + 1, __('Next', 'latepoint-dashboard-extender'), 'next');
+        }
+        $parent->appendChild($nav);
+    }
 
-        return $qualifying;
+    private static function append_press_ons_page_link($dom, $nav, $page, $label, $rel) {
+        $link = $dom->createElement('a');
+        // Keep the dashboard URL and unrelated query parameters, including page_id.
+        // DOM serialization performs HTML attribute escaping.
+        $link->setAttribute('href', esc_url_raw(add_query_arg('ishi_press_ons_page', $page)));
+        $link->setAttribute('class', 'latepoint-btn latepoint-btn-primary latepoint-btn-outline latepoint-btn-sm');
+        $link->setAttribute('rel', $rel);
+        $link->appendChild($dom->createTextNode($label));
+        $nav->appendChild($link);
+    }
+
+    private static function activate_press_ons_tab($xpath, $trigger_container, $press_trigger, $press_content) {
+        if (!self::requested_press_ons_page()) {
+            return;
+        }
+        $wrapper = $xpath->query('ancestor::*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tabs-w ")][1]', $trigger_container)->item(0);
+        if (!$wrapper) {
+            return;
+        }
+        foreach (array(
+            $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-trigger ")]', $trigger_container),
+            $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " latepoint-tab-content ")]', $wrapper),
+        ) as $nodes) {
+            foreach ($nodes as $node) {
+                $node->setAttribute('class', trim(preg_replace('/(^|\s)active(?=\s|$)/', '', $node->getAttribute('class'))));
+            }
+        }
+        $press_trigger->setAttribute('class', $press_trigger->getAttribute('class') . ' active');
+        $press_content->setAttribute('class', $press_content->getAttribute('class') . ' active');
     }
 
     private static function is_pure_latepoint_order($order) {
