@@ -1,6 +1,6 @@
 # LatePoint Dashboard Extender
 
-Current version: **0.10.29**
+Current version: **0.10.30**
 
 Extends the output of `[latepoint_customer_dashboard]` while retaining LatePoint's native tab switching and lightboxes.
 
@@ -13,6 +13,16 @@ Missing optional tabs are skipped. Unknown add-on tabs retain their positions.
 Addresses uses `[ishi_customer_addresses]` when registered. Otherwise, it renders the existing WooCommerce billing/shipping display if WooCommerce's account endpoint API is available. The shortcode and fallback are never both rendered. An empty shortcode response stays empty; an invalid response leaves the incoming dashboard unchanged at the Addresses composition stage.
 
 The Addresses shortcode belongs to a separate plugin. Its own validation, saving, and scripts remain that plugin's responsibility.
+
+## Press-Ons pagination
+
+Press-Ons uses the same default page size as WooCommerce My Account → Orders: WordPress's `posts_per_page` setting (normally 10). A positive `limit` supplied through `woocommerce_my_account_my_orders_query` is honored. Other query overrides are not copied; order ownership, types, and statuses remain restricted. Invalid or unlimited limits fall back to the finite site default.
+
+Previous/Next links use `ishi_press_ons_page` on the existing dashboard URL, preserving other query parameters and selecting Press-Ons after navigation. The normal initial visit still selects Appointments. Invalid page values use page one; requests beyond the end display the last eligible page.
+
+Eligibility is checked before pages are filled: pure LatePoint-category orders are excluded, while mixed orders, missing products, and empty orders retain their existing treatment. Queries use WooCommerce's order API in batches of 50, with date/ID sorting. Only the current page is retained, and scanning stops once another eligible order establishes that Next is available. There is no unfiltered total/page count.
+
+This avoids loading every order at once, but deep pages or histories dominated by excluded orders can still require scanning many batches. No database-specific SQL, persistent classification metadata, or cache is introduced.
 
 ## Dependencies
 
@@ -30,9 +40,10 @@ Run with PHP CLI and the DOM extension:
 ```sh
 php tests/run.php
 php tests/run.php --without-woocommerce
+php tests/pagination.php
 ```
 
-GitHub Actions runs PHP syntax checks and both regression modes on pushes to `main-features`, pull requests, and manual dispatch. The workflow uses the PHP runtime supplied by `ubuntu-24.04` and prints its version.
+GitHub Actions runs PHP syntax checks and the Addresses/tab and pagination regression suites on pushes to `main-features`, pull requests, and manual dispatch. The workflow uses the PHP runtime supplied by `ubuntu-24.04` and prints its version.
 
 The standalone tests use small WordPress/WooCommerce doubles. They verify single Addresses rendering, fallback behavior, empty/invalid responses, Unicode and form preservation, exception cleanup, tab ordering, Messages badges, optional/unknown tabs, and release-version consistency. They do not replace a live WordPress integration test.
 
@@ -43,6 +54,7 @@ The standalone tests use small WordPress/WooCommerce doubles. They verify single
 3. On staging, verify address editing/saving and notices, all seven tabs, Messages unread counts/conversations, Press-Ons lightboxes, and mobile layout.
 4. Repeat the Addresses check with its shortcode plugin disabled to confirm the fallback.
 5. Confirm behavior for logged-out visitors and customers without orders or appointments.
-6. Record the WordPress, PHP, LatePoint, Pro Features, and WooCommerce versions actually tested before tagging or deploying a release.
+6. Test Press-Ons with more than one page, mixed/excluded orders, Previous/Next, and the site's configured page size. Verify both HPOS and legacy order storage when those modes are supported by the deployment.
+7. Record the WordPress, PHP, LatePoint, Pro Features, and WooCommerce versions actually tested before tagging or deploying a release.
 
 GitHub commits do not deploy this plugin to WordPress automatically.
